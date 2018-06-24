@@ -1,0 +1,77 @@
+#!/bin/bash
+#SBATCH --job-name="1node.blk"
+#SBATCH --output="results/1node.single.%j.out"
+#SBATCH --partition=RM
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=28
+#SBATCH --export=ALL
+# mail alert at start, end and abortion of execution
+#SBATCH --mail-type=ALL
+# send mail to this address
+#SBATCH --mail-user=qoofyk@gmail.com
+#SBATCH -t 4:00:00
+
+#RM-shared / RM
+##################parameter setting#################################################
+PBS_O_HOME=$HOME
+PBS_O_WORKDIR=$(pwd)
+
+WORK_DIR=${PBS_O_WORKDIR}
+RESULT_DIR=${WORK_DIR}/results/
+mkdir -pv ${RESULT_DIR}
+
+BUILD_DIR=${WORK_DIR}/build/bin
+cd ${RESULT_DIR}
+
+module list
+lscpu
+echo "result will be saved in ${RESULT_DIR}"
+
+#dimension
+lx=(128 256 512 1024 2048 4096 8192 16384)
+step=(163840 40960 10240 2560 640 160 40 10)
+#lx=(128 256 512 )
+#step=(163840 40960 10240 )
+
+#export KMP_AFFINITY=verbose
+
+blk_size=4 # for these three cases, the blk_size has no effect
+#for CASE_NAME in origin_papi combine_papi tight_papi
+for CASE_NAME in origin combine tight
+do
+    for (( k=0; k< ${#lx[@]}; k++ ))
+    do
+        for i in `seq 3`
+        do
+            export STOP=${step[k]}
+            ly=${lx[k]}
+            echo "No.$i exp of case ${CASE_NAME} lx=${lx[k]} step=${STOP} start "
+            ${BUILD_DIR}/unsteady_${CASE_NAME} ${lx[k]} $ly $blk_size
+            echo "No.$i exp of case ${CASE_NAME} done "
+        done
+    done
+done
+
+#blk_size=(1 2 4 8 16 32 64 128 256 512)
+#blk_size=(32 64 128)
+#blk_size=(1 2 4 8 16)
+blk_size=(64)
+for (( k=0; k< ${#lx[@]}; k++ ))
+do
+    #for CASE_NAME in tight_block_papi
+    for CASE_NAME in tight_block
+    do
+        for ((m=0; m<${#blk_size[@]}; m++ ))
+        do
+           for i in `seq 3`
+            do
+                export STOP=${step[k]}
+                ly=${lx[k]}
+                echo "No.$i exp of case ${CASE_NAME} lx=${lx[k]} step=${STOP} start "
+                ${BUILD_DIR}/unsteady_${CASE_NAME} ${lx[k]} $ly ${blk_size[m]}
+                echo "No.$i exp of case ${CASE_NAME} done "
+            done
+        done
+    done
+done
+

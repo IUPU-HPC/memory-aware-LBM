@@ -1,0 +1,50 @@
+README file
+
+Note:
+fpop: f(9 directions)
+
+
+Build for original case
+    mkdir build_origin
+    cd build_origin
+    cmake .. -DADD_FLAGS='-O3'
+    make
+
+stream immediately after collision
+Build with overlap
+    streaming after each collision
+    mkdir build_combine
+    cd buil_overlap
+    cmake .. -DADD_FLAGS='-O3 -DCOMBINE'
+    make
+
+bound, not important
+Build with quicktest
+    for two iteration in one time
+    mkdir build_quicktest
+    cd build_quicktest
+    cmake .. -DADD_FLAGS='-O3 -DQUICKTEST'
+    make
+
+# final version
+Build with tight
+    increase overlap with proposed method
+    mkdir build_tight
+    cd build_tight
+    cmake .. -DADD_FLAGS='-O3 -DTIGHT'
+    make
+
+Build with tight_block
+    increase overlap with proposed method
+    mkdir build_tight_block
+    cd build_tight_block
+    cmake .. -DADD_FLAGS='-O3 -DTIGHT_BLOCK'
+    make
+
+# Yuankun version
+Build with segment
+    increase overlap with Yuankun's method
+    mkdir build_segment
+    cd build_segment
+    cmake .. -DADD_FLAGS='-O3 -DSEGMENT'
+    make

@@ -1,0 +1,164 @@
+#!/bin/bash
+
+# set the number of nodes and processes per node
+#PBS -l nodes=1:ppn=32
+
+# set max wallclock time
+#PBS -l walltime=01:00:00
+
+# mail alert at (b)eginning, (e)nd and (a)bortion of execution
+#PBS -m abe
+
+# send mail to the following address
+#PBS -M fuyuan@iupui.edu
+
+# set the job name
+#PBS -N 1node
+
+#PBS -k oe
+
+#PBS -o results/
+
+#PBS -q debug_cpu
+
+# use submission environment
+#PBS -V
+
+# merge standard error stream with the standard output stream of the job
+#PBS -j oe
+
+WORK_DIR=${PBS_O_WORKDIR}
+RESULT_DIR=${WORK_DIR}/results/
+mkdir -pv ${RESULT_DIR}
+
+BUILD_DIR=${WORK_DIR}/build/bin
+cd ${RESULT_DIR}
+
+
+#dimension
+lx=16384
+ly=24576
+export STOP=10 #time stop
+
+
+
+# blk_size=32
+# # for CASE_NAME in  origin combine quicktest tight tight_block segment
+# for CASE_NAME in combine tight
+# for CASE_NAME in tight
+# do
+#     echo "result will be saved in ${RESULT_DIR}"
+#     for i in `seq 1`
+#     do
+#         # ${BUILD_DIR}/unsteady $lx $ly $blk_size &> ${RESULT_DIR}/${CASE_NAME}_${i}.log
+#         aprun -n 1 ${BUILD_DIR}/unsteady_${CASE_NAME} $lx $ly $blk_size
+#         echo "No.$i exp of case ${CASE_NAME} done "
+#     done
+# done
+
+blk_size=32
+for CASE_NAME in origin_openmp
+# for CASE_NAME in combine_openmp
+do
+    echo "result will be saved in ${RESULT_DIR}"
+    for i in `seq 1`
+    do
+        export OMP_NUM_THREADS=1
+        aprun -n 1 -d 1 ${BUILD_DIR}/unsteady_${CASE_NAME} $lx $ly $blk_size
+
+        # export OMP_NUM_THREADS=2
+        # aprun -n 1 -d 2 ${BUILD_DIR}/unsteady_${CASE_NAME} $lx $ly $blk_size
+
+        # export OMP_NUM_THREADS=4
+        # aprun -n 1 -d 4 ${BUILD_DIR}/unsteady_${CASE_NAME} $lx $ly $blk_size
+
+        # export OMP_NUM_THREADS=8
+        # aprun -n 1 -d 8 ${BUILD_DIR}/unsteady_${CASE_NAME} $lx $ly $blk_size
+
+        # export OMP_NUM_THREADS=16
+        # aprun -n 1 -d 16 ${BUILD_DIR}/unsteady_${CASE_NAME} $lx $ly $blk_size
+
+        # export OMP_NUM_THREADS=32
+        # aprun -n 1 -d 32 ${BUILD_DIR}/unsteady_${CASE_NAME} $lx $ly $blk_size
+
+        echo "No.$i exp of case ${CASE_NAME} done "
+    done
+done
+
+blk_size=32
+chunk_size=(8192 4096 2048 1024 512)
+# for CASE_NAME in origin_openmp combine_openmp tight_openmp
+for CASE_NAME in origin_openmp
+do
+    echo "result will be saved in ${RESULT_DIR}"
+    for i in `seq 1`
+    do
+        for ((m=0; m<${#chunk_size[@]}; m++)); do
+        # export OMP_NUM_THREADS=1
+        # aprun -n 1 -d 1 ${BUILD_DIR}/unsteady_${CASE_NAME} $lx $ly $blk_size
+
+        export OMP_NUM_THREADS=2
+        aprun -n 1 -d 2 ${BUILD_DIR}/unsteady_${CASE_NAME} $lx $ly $blk_size ${chunk_size[m]}
+
+        # export OMP_NUM_THREADS=4
+        # aprun -n 1 -d 4 ${BUILD_DIR}/unsteady_${CASE_NAME} $lx $ly $blk_size
+
+        # export OMP_NUM_THREADS=8
+        # aprun -n 1 -d 8 ${BUILD_DIR}/unsteady_${CASE_NAME} $lx $ly $blk_size
+
+        # export OMP_NUM_THREADS=16
+        # aprun -n 1 -d 16 ${BUILD_DIR}/unsteady_${CASE_NAME} $lx $ly $blk_size
+
+        # export OMP_NUM_THREADS=32
+        # aprun -n 1 -d 32 ${BUILD_DIR}/unsteady_${CASE_NAME} $lx $ly $blk_size
+
+        echo "No.$i exp of case ${CASE_NAME} done "
+        done
+    done
+done
+
+
+# # #run tight_block with different block size
+# # # blk_size=(2 4 8 16 32 64 128 256 512 1024)
+# blk_size=(128 256)
+# for CASE_NAME in tight_block segment
+# do
+#     echo "result will be saved in ${RESULT_DIR}"
+#     for ((k=0; k<${#blk_size[@]}; k++)); do
+#         for i in `seq 1`
+#         do
+#             aprun -n 1 ${BUILD_DIR}/unsteady_${CASE_NAME} $lx $ly ${blk_size[k]}
+#             echo "No.$i exp of case ${CASE_NAME} ${blk_size[k]} done "
+#         done
+#     done
+# done
+
+# blk_size=(8 16 64 128)
+# for CASE_NAME in tight_block_openmp
+# do
+#     echo "result will be saved in ${RESULT_DIR}"
+#     for ((k=0; k<${#blk_size[@]}; k++)); do
+#         for i in `seq 1`
+#         do
+#             export OMP_NUM_THREADS=32
+#             aprun -n 1 -d 32 ${BUILD_DIR}/unsteady_${CASE_NAME} $lx $ly ${blk_size[k]}
+#             echo "No.$i exp of case ${CASE_NAME} ${blk_size[k]} done "
+#         done
+#     done
+# done
+
+# # # run tight_block with different segment size
+# # # blk_size=(2 4 8 16 32 64 128 256 512 1024)
+# blk_size=(512 1024 2048 4096)
+# for CASE_NAME in segment_openmp
+# do
+#     echo "result will be saved in ${RESULT_DIR}"
+#     for ((k=0; k<${#blk_size[@]}; k++)); do
+#         for i in `seq 1`
+#         do
+#             export OMP_NUM_THREADS=32
+#             aprun -n 1 -d 32 ${BUILD_DIR}/unsteady_${CASE_NAME} $lx $ly ${blk_size[k]}
+#             echo "No.$i exp of case ${CASE_NAME} ${blk_size[k]} done "
+#         done
+#     done
+# done

@@ -1,0 +1,79 @@
+#!/bin/bash
+#SBATCH --job-name="1node"
+#SBATCH --output="results/1node.omp.%j.out"
+#SBATCH --partition=RM
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=28
+#SBATCH --export=ALL
+# mail alert at start, end and abortion of execution
+#SBATCH --mail-type=ALL
+# send mail to this address
+#SBATCH --mail-user=qoofyk@gmail.com
+#SBATCH -t 1:00:00
+
+#RM-shared / RM
+##################parameter setting#################################################
+PBS_O_HOME=$HOME
+PBS_O_WORKDIR=$(pwd)
+
+WORK_DIR=${PBS_O_WORKDIR}
+RESULT_DIR=${WORK_DIR}/results/
+mkdir -pv ${RESULT_DIR}
+
+BUILD_DIR=${WORK_DIR}/build/bin
+cd ${RESULT_DIR}
+
+
+#dimension
+lx=1024
+ly=1024
+export STOP=20 #time stop
+
+blk_size=4 # for these three cases, the blk_size has no effect
+for CASE_NAME in origin combine tight
+do
+    echo "result will be saved in ${RESULT_DIR}"
+    for i in `seq 2`
+    do
+
+        ${BUILD_DIR}/unsteady_${CASE_NAME} $lx $ly $blk_size
+        echo "No.$i exp of case ${CASE_NAME} done "
+    done
+done
+
+blk_size=4 # for these three cases, the blk_size has no effect
+for CASE_NAME in origin_openmp combine_openmp tight_openmp
+# for CASE_NAME in tight_openmp
+do
+    echo "result will be saved in ${RESULT_DIR}"
+    for i in `seq 2`
+    do
+        export OMP_NUM_THREADS=1
+        thread_block=1024
+        ${BUILD_DIR}/unsteady_${CASE_NAME} $lx $ly $blk_size $thread_block
+
+        export OMP_NUM_THREADS=2
+        thread_block=512
+        ${BUILD_DIR}/unsteady_${CASE_NAME} $lx $ly $blk_size $thread_block
+
+        export OMP_NUM_THREADS=4
+        thread_block=256
+        ${BUILD_DIR}/unsteady_${CASE_NAME} $lx $ly $blk_size $thread_block
+
+        export OMP_NUM_THREADS=8
+        thread_block=128
+        ${BUILD_DIR}/unsteady_${CASE_NAME} $lx $ly $blk_size $thread_block
+
+        export OMP_NUM_THREADS=16
+        thread_block=64
+        ${BUILD_DIR}/unsteady_${CASE_NAME} $lx $ly $blk_size $thread_block
+
+        # export OMP_NUM_THREADS=32
+        # thread_block=4096
+        # ${BUILD_DIR}/unsteady_${CASE_NAME} $lx $ly ${blk_size[k]} $thread_block
+
+        echo "No.$i exp of case ${CASE_NAME} done "
+    done
+done
+
+
