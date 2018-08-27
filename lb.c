@@ -101,7 +101,8 @@ void constructSim(Simulation* sim, int lx, int ly) {
     sim->tmpLattice     = (Node**) calloc(lx+2, sizeof(Node*));
 
     int iX, iY;
-    for (iX=0; iX<lx+2; ++iX) {
+    
+/*    for (iX=0; iX<lx+2; ++iX) {
         sim->lattice[iX] = sim->memoryChunk + iX*(ly+2);
         sim->tmpLattice[iX] = sim->tmpMemoryChunk + iX*(ly+2);
         for (iY=0; iY<ly+2; ++iY) {
@@ -109,6 +110,7 @@ void constructSim(Simulation* sim, int lx, int ly) {
             constructNode(&(sim->tmpLattice[iX][iY]));
         }
     }
+*/
 
     int iix, iiy;
     for (iX=1; iX<=lx; iX+=blk_size) {
@@ -124,6 +126,45 @@ void constructSim(Simulation* sim, int lx, int ly) {
                 }    
             }
         }
+    }
+
+    Node* after = sim->memoryChunk + lx*ly;
+    Node* tmpAfter = sim->tmpMemoryChunk + lx*ly;
+
+    //left
+    for(iY=0; iY<ly+2; ++iY){
+        &(sim->lattice[0][iY]) = after + iY;
+        &(sim->tmpLattice[0][iY] = tmpAfter + iY;
+
+        constructNode(&(sim->lattice[0][iY]));
+        constructNode(&(sim->tmpLattice[0][iY]));
+    }
+        
+    //right
+    for(iY=0; iY<ly+2; ++iY){
+        &(sim->lattice[lx+1][iY]) = after + ly + 2 + iY;
+        &(sim->tmpLattice[lx+1][iY] = tmpAfter + ly + 2 + iY;
+
+        constructNode(&(sim->lattice[lx+1][iY]));
+        constructNode(&(sim->tmpLattice[lx+1][iY]));
+    }
+
+    //bottom
+    for(iX=0; iX<lx+2; ++iX){
+        &(sim->lattice[iX][0]) = after + 2 * (ly + 2) + iX;
+        &(sim->tmpLattice[iX][0] = tmpAfter + 2 * (ly + 2) + iX;
+
+        constructNode(&(sim->lattice[iX][0]));
+        constructNode(&(sim->tmpLattice[iX][0]));
+    }
+
+    //up
+    for(iX=0; iX<lx+2; ++iX){
+        &(sim->lattice[iX][ly+1]) = after + 2 * (ly + 2) + lx + 2 + iX;
+        &(sim->tmpLattice[iX][ly+1] = tmpAfter + 2 * (ly + 2) + lx + 2 + iX;
+
+        constructNode(&(sim->lattice[iX][ly+1]));
+        constructNode(&(sim->tmpLattice[iX][ly+1]));
     }
 
 }
