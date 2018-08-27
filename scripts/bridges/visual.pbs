@@ -1,0 +1,73 @@
+#!/bin/bash
+#SBATCH --job-name="visual"
+#SBATCH --output="results/visual.%j.out"
+#SBATCH --partition=RM
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=28
+#SBATCH --export=ALL
+# mail alert at start, end and abortion of execution
+#SBATCH --mail-type=ALL
+# send mail to this address
+#SBATCH --mail-user=qoofyk@gmail.com
+#SBATCH -t 1:00:00
+
+#RM-shared / RM
+##################parameter setting#################################################
+PBS_O_HOME=$HOME
+PBS_O_WORKDIR=$(pwd)
+
+WORK_DIR=${PBS_O_WORKDIR}
+RESULT_DIR=${WORK_DIR}/results/
+export SCRATCH_DIR=${SCRATCH}/visual_data/${SLURM_JOBID}
+mkdir -pv ${SCRATCH_DIR}
+
+BUILD_DIR=${WORK_DIR}/build/bin
+cd ${SCRATCH_DIR}
+
+module list
+lscpu
+echo "result will be saved in ${SCRATCH_DIR}"
+
+#dimension
+lx=(1280)
+step=(100000)
+ly=256
+
+#blk_size=4 # for these three cases, the blk_size has no effect
+#for CASE_NAME in origin combine tight
+#do
+    #for (( k=0; k< ${#lx[@]}; k++ ))
+    #do
+        #for i in `seq 3`
+        #do
+            #export STOP=${step[k]}
+            #ly=${lx[k]}
+            #echo "No.$i exp of case ${CASE_NAME} lx=${lx[k]} step=${STOP} start "
+            #${BUILD_DIR}/unsteady_${CASE_NAME} ${lx[k]} $ly $blk_size
+            #echo "No.$i exp of case ${CASE_NAME} done "
+        #done
+    #done
+#done
+
+#blk_size=(1 2 4 8 16 32 64 128 256 512)
+threads=(16)
+blk_size=(16)
+for (( k=0; k< ${#lx[@]}; k++ ))
+do
+    for CASE_NAME in tight_block_openmp
+    do
+        for ((m=0; m<${#blk_size[@]}; m++ ))
+        do
+        for i in `seq 1`
+        do
+            export STOP=${step[k]}
+            export OMP_NUM_THREADS=${threads[k]}
+            thread_block=$((${lx[k]} / ${OMP_NUM_THREADS}))
+            echo "No.$i exp of case ${CASE_NAME} lx=${lx[k]} step=${STOP} start "
+            ${BUILD_DIR}/unsteady_${CASE_NAME} ${lx[k]} $ly ${blk_size[m]} $thread_block
+            echo "No.$i exp of case ${CASE_NAME} done "
+        done
+        done
+    done
+done
+

@@ -92,12 +92,13 @@ void setConstants(int argc, char *argv[]) {
     obst_r = lx/10+1;   // radius of the cylinder
     obst_x = lx/5;
     obst_y = ly/2;*/
-    
+
     lx = atoi(argv[1]);     //channel lenghth
     ly = atoi(argv[2]);     //channel width
     blk_size = atoi(argv[3]);
 
-    obst_r = 8;   // radius of the cylinder
+    /*obst_r = 8;   // radius of the cylinder*/
+    obst_r = ly/10+1;   // radius of the cylinder
     obst_x = lx/4;      // position of the cylinder; the cylinder is
     obst_y = ly/2;      // offset from the center to break symmetry
 
@@ -107,7 +108,7 @@ void setConstants(int argc, char *argv[]) {
     omega = 1. / (3*nu+1./2.);      // relaxation parameter
 
     maxT   = atoi(getenv("STOP"));       // total number of iterations
-    tSave  = 2;          // frequency of periodic saves to disk
+    tSave  = 100;          // frequency of periodic saves to disk
 
     printf("\nlx=%d, ly=%d, omega=%f, blk_size=%d\n\n", lx, ly, omega, blk_size);
 }
@@ -395,7 +396,7 @@ int main(int argc, char *argv[]) {
 
     // bounce back dynamics in obstacles, else use lbgk(bulk dynamics)
     iniGeometry();
-    printf("Pass iniGeometry, obst_x=%d, obst_y=%d, obst_r=%d\n", 
+    printf("Pass iniGeometry, obst_x=%d, obst_y=%d, obst_r=%d\n",
              obst_x, obst_y, obst_r);
     fflush(stdout);
 
@@ -566,7 +567,7 @@ int main(int argc, char *argv[]) {
 
     //save final data
 #ifndef NO_SAVE
-    sprintf(filename, "vel_%s_%d.dat", case_name, count);
+    sprintf(filename, "vel_%s_stream_%d.dat", case_name, count);
     saveVel(&sim, filename);
 #endif
 
