@@ -109,6 +109,23 @@ void constructSim(Simulation* sim, int lx, int ly) {
             constructNode(&(sim->tmpLattice[iX][iY]));
         }
     }
+
+    int iix, iiy;
+    for (iX=1; iX<=lx; iX+=blk_size) {
+        for (iY=1; iY<=ly; iY+=blk_size) {
+            for(iix = 0; iix < blk_size; iix++){
+                for(iiy = 0; iiy < blk_size; iiy++){
+
+                    &(sim->lattice[iX+iix][iY+iiy]) = sim->memoryChunk + iiy + iix*blk_size + iY * blk_size * blk_size + iX * ly * blk_size;
+                    &(sim->tmpLattice[iX+iix][iY+iiy]) = sim->tmpMemoryChunk + iiy + iix*blk_size + iY * blk_size * blk_size + iX * ly * blk_size;
+
+                    constructNode(&(sim->lattice[iX+iix][iY+iiy]));
+                    constructNode(&(sim->tmpLattice[iX+iix][iY+iiy]));
+                }    
+            }
+        }
+    }
+
 }
 
   // free the memory for the simulation ("destructor")
