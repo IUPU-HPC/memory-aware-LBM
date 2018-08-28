@@ -125,8 +125,6 @@ void constructSim_blk(Simulation* sim, int lx, int ly) {
     sim->tmpMemoryChunk =
         (Node*) calloc((lx+2)*(ly+2), sizeof(Node));
 
-    // sim->tmpMemoryChunk2 =
-    //     (Node*) calloc((lx+2)*(ly+2), sizeof(Node));
     sim->lattice        = (Node**) calloc(lx+2, sizeof(Node*));
     sim->tmpLattice     = (Node**) calloc(lx+2, sizeof(Node*));
 
@@ -135,14 +133,19 @@ void constructSim_blk(Simulation* sim, int lx, int ly) {
         for (iY=1; iY<=ly; iY+=blk_size) {
             for(iix = 0; iix < blk_size; iix++){
 
-                sim->lattice[iX+iix] = sim->memoryChunk + iix*blk_size + iY * blk_size * blk_size + iX * ly * blk_size; 
-                sim->tmpLattice[iX+iix] = sim->tmpMemoryChunk + iix*blk_size + iY * blk_size * blk_size + iX * ly * blk_size;
+                printf("iX=%d, iY=%d, iix=%d\n", iX, iY, iix);
+                printf("current blk_line position=%d\n", iix*blk_size + (iY-1) * blk_size + (iX-1) * ly);
+                sim->lattice[iX+iix] = sim->memoryChunk + iix*blk_size + (iY-1) * blk_size  + (iX-1) * ly; 
+                sim->tmpLattice[iX+iix] = sim->tmpMemoryChunk + iix*blk_size + (iY-1) * blk_size  + (iX-1) * ly;
 
+                printf("cur_position\n ");
                 for(iiy = 0; iiy < blk_size; iiy++){
 
+                    printf("[%d:%d] -> %d ", iX+iix, iY+iiy, iiy + iix*blk_size + (iY-1) * blk_size + (iX-1) * ly);
                     constructNode(&(sim->lattice[iX+iix][iY+iiy]));
-                    /*constructNode(&(sim->tmpLattice[iX+iix][iY+iiy]));*/
+                    constructNode(&(sim->tmpLattice[iX+iix][iY+iiy]));
                 }    
+                printf("\n");
             }
         }
     }
@@ -151,40 +154,59 @@ void constructSim_blk(Simulation* sim, int lx, int ly) {
     Node* tmpAfter = sim->tmpMemoryChunk + lx*ly;
 
     //left
+    printf("left:");
     for(iY=0; iY<ly+2; ++iY){
         sim->lattice[0] = after;
         sim->tmpLattice[0] = tmpAfter;
 
+        iX=0;
+        printf("[%d:%d] -> %d ", iX, iY, lx*ly + iY);
         constructNode(&(sim->lattice[0][iY]));
         constructNode(&(sim->tmpLattice[0][iY]));
     }
-        
+    printf("\n");
+
     //right
+    printf("right:");
     for(iY=0; iY<ly+2; ++iY){
         sim->lattice[lx+1] = after + ly + 2;
         sim->tmpLattice[lx+1] = tmpAfter + ly + 2;
+        
+        iX=lx+1;
+        printf("[%d:%d] -> %d ", iX, iY, lx*ly + ly + 2 + iY);
 
         constructNode(&(sim->lattice[lx+1][iY]));
         constructNode(&(sim->tmpLattice[lx+1][iY]));
     }
+    printf("\n");
 
     //bottom
-    for(iX=0; iX<lx+2; ++iX){
+    printf("bottom:");
+    for(iX=1; iX<lx+1; ++iX){
         sim->lattice[iX] = after + 2 * (ly + 2);
         sim->tmpLattice[iX] = tmpAfter + 2 * (ly + 2);
+
+        iY=0;
+        printf("[%d:%d] -> %d ", iX, iY, lx*ly + 2*(ly + 2) + iX - 1);
 
         constructNode(&(sim->lattice[iX][0]));
         constructNode(&(sim->tmpLattice[iX][0]));
     }
+    printf("\n");
 
     //up
-    for(iX=0; iX<lx+2; ++iX){
-        sim->lattice[iX] = after + 2 * (ly + 2) + lx + 2;
-        sim->tmpLattice[iX] = tmpAfter + 2 * (ly + 2) + lx + 2;
+    printf("up:");
+    for(iX=1; iX<lx+1; ++iX){
+        sim->lattice[iX] = after + 2 * (ly + 2) + lx;
+        sim->tmpLattice[iX] = tmpAfter + 2 * (ly + 2) + lx;
+
+        iY=ly+1;
+        printf("[%d:%d] -> %d ", iX, iY, lx*ly + 2*(ly + 2) + lx + iX - 1);
 
         constructNode(&(sim->lattice[iX][ly+1]));
         constructNode(&(sim->tmpLattice[iX][ly+1]));
     }
+    printf("\n");
 
 }
 
