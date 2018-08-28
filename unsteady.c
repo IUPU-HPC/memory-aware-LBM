@@ -35,7 +35,7 @@
 #include <stdlib.h>
 #include "eval_tools.h"
 
-/*#define NO_SAVE*/
+#define NO_SAVE
 
   // These constants define the flow geometry and are commented in
   //   the function setConstants()
@@ -517,12 +517,10 @@ int main(int argc, char *argv[]) {
             printf("iT=%d, save, count=%d\n", iT, count);
             fflush(stdout);
             sprintf(filename, "vel_%s_stream_%d.dat", case_name, count);
-            /*sprintf(filename, "vel_%s_stream_%d.dat", case_name, iT);*/
             saveVel(&sim, filename);
             count++;
         }
 #endif
-
 
           // By default: periodic boundary conditions. In this case,
           //   this is important, because the upper and lower
@@ -537,7 +535,6 @@ int main(int argc, char *argv[]) {
           // the data are written to disk after streaming and Periodic, to be
           //   that the macroscopic variables are computed
           //   correctly on the boundaries
-
 
 /*
         updateZeroGradientBoundary();
