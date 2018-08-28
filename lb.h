@@ -116,6 +116,7 @@ void collide_tight_panel_iy_openmp(Simulation* sim);
 void finalize_tight(Simulation* sim);
 
 void constructSim(Simulation* sim, int lx, int ly);
+void constructSim_blk(Simulation* sim, int lx, int ly);
 void destructSim(Simulation* sim);
 void setDynamics(Simulation* sim, int iX, int iY, Dynamics* dyn);
 
