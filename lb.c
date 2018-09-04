@@ -66,7 +66,7 @@ static const int c[9][2] = {
 void constructNode(Node* node) {
     int iPop;
     for (iPop=0; iPop<9; ++iPop) {
-        node->fPop[iPop] = 0.;
+        node->fPop[iPop] = 0.1;
     }
     node->dynamics = 0;
 }
@@ -84,6 +84,139 @@ void iniEquilibrium(Node* node, double rho, double ux, double uy) {
 
 /* struct Simulation, methods                                    */
 /*****************************************************************/
+int map(Simulation* sim, Node* rawMem, int ix, int iy){
+
+    int iX, iY, iix, iiy, pos;
+    int lx = sim->lx, ly=sim->ly;
+    int b = blk_size;
+   
+    //left bottom corner 
+    if(ix <= b && iy<= b){ 
+        iX = 0;
+        iY = 0;
+        iix = ix;
+        iiy = iy;
+
+        pos = iiy + iix*(b+1);
+        printf("A: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);
+
+        return pos;
+        /*return rawMem + pos;*/
+    }
+    
+    //left middle 
+    if(ix <= b && b<iy && iy<=(ly-b)){ 
+        iX = 0;
+        iY = (iy-b-1) / b + 1;
+        iix = ix;
+        iiy = (iy-b-1) % b;
+
+        pos = (b+1)*(b+1) + iiy + iix*b + (iY-1) * (b+1) * b; 
+        printf("B: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);
+
+        return pos;
+        /*return rawMem + pos;*/
+    }
+
+    //left up corner
+    if(ix <= b && iy>(ly-b)){ 
+        iX = 0;
+        iY = ly / b - 1;
+        iix = ix;
+        iiy = iy-(ly-b+1);
+
+        pos = (b+1)*(ly-b+1) + iiy + iix*(b+1);
+        printf("C: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);
+
+        return pos;
+        /*return rawMem + pos;*/
+    }
+
+    //bottom middle
+    if(b < ix && ix <= (lx-b) && iy<=b){ 
+        iX = (ix-b-1) / b + 1;
+        iY = 0;
+        iix = (ix-b-1) % b;
+        iiy = iy;
+
+        pos = (b+1)*(ly+2)+b*(ly+2)*(iX-1) + iiy + iix*(b+1);
+        printf("D: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);
+
+        return pos;
+        /*return rawMem + pos;*/
+    }
+
+    //middle
+    if(b < ix && ix <= (lx-b) && b<iy && iy<=(ly-b)){ 
+        iX = (ix-b-1) / b + 1;
+        iY = (iy-b-1) / b + 1;
+        iix = (ix-b-1) % b;
+        iiy = (iy-b-1) % b;
+
+        pos = (b+1)*(ly+2)+b*(ly+2)*(iX-1) + b*(b+1) + iiy + iix*b + (iY-1)*b*b;
+        printf("E: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);
+
+        return pos;
+        /*return rawMem + pos;*/
+    }
+
+    //up up
+    if(b < ix && ix <= (lx-b) && iy>(ly-b)){ 
+        iX = (ix-b-1) / b + 1;
+        iY = ly / b - 1;
+        iix = (ix-b-1) % b;
+        iiy = iy-(ly-b+1);
+
+        pos = (b+1)*(ly+2)+b*(ly+2)*(iX-1) + b*(ly-b+1) + iiy + iix*(b+1);
+        printf("F: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);
+
+        return pos;
+        /*return rawMem + pos;*/
+    }
+
+    //right bottom corner
+    if(ix > (lx-b) && iy<=b){ 
+        iX = lx / b - 1;
+        iY = 0;
+        iix = ix-(lx-b+1);
+        iiy = iy;
+
+        pos = (lx-b+1)*(ly+2) + iiy + iix*(b+1);
+        printf("G: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);
+
+        return pos;
+        /*return rawMem + pos;*/
+    }
+
+    //right middle
+    if(ix > (lx-b) && b<iy && iy<=(ly-b)){ 
+        iX = lx / b - 1;
+        iY = (iy-b-1) / b + 1;
+        iix = ix-(lx-b+1);
+        iiy = (iy-b-1) % b;
+
+        pos = (lx-b+1)*(ly+2) + (b+1)*(b+1) + iiy + iix*b + (iY-1)*(b+1)*b;
+        printf("H: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);
+
+        return pos;
+        /*return rawMem + pos;*/
+    }
+
+    //right up corner 
+    if(ix > (lx-b) && iy>(ly-b)){ 
+        iX = lx / b - 1;
+        iY = ly / b - 1;
+        iix = ix-(lx-b+1);
+        iiy = iy-(ly-b+1);
+
+        pos = (lx-b+1)*(ly+2)+(b+1)*(ly-b+1) + iiy + iix*(b+1);
+        printf("I: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);
+
+        return pos;
+        /*return rawMem + pos;*/
+    }
+
+}
 
   // allocate memory for a full simulation ("constructor")
 void constructSim(Simulation* sim, int lx, int ly) {
@@ -97,8 +230,6 @@ void constructSim(Simulation* sim, int lx, int ly) {
     sim->tmpMemoryChunk =
         (Node*) calloc((lx+2)*(ly+2), sizeof(Node));
 
-    // sim->tmpMemoryChunk2 =
-    //     (Node*) calloc((lx+2)*(ly+2), sizeof(Node));
     sim->lattice        = (Node**) calloc(lx+2, sizeof(Node*));
     sim->tmpLattice     = (Node**) calloc(lx+2, sizeof(Node*));
 
@@ -108,106 +239,18 @@ void constructSim(Simulation* sim, int lx, int ly) {
         sim->lattice[iX] = sim->memoryChunk + iX*(ly+2);
         sim->tmpLattice[iX] = sim->tmpMemoryChunk + iX*(ly+2);
         for (iY=0; iY<ly+2; ++iY) {
+#if defined(TIGHT_BLOCK)            
+            int m = map(sim, sim->memoryChunk, iX, iY);
+            int tmpM = map(sim, sim->tmpMemoryChunk, iX, iY); 
+            printf("m=%d, iX=%d, iY=%d\n", m, iX, iY);
+            constructNode(sim->memoryChunk+m);
+            constructNode(sim->tmpMemoryChunk+tmpM);
+#else
             constructNode(&(sim->lattice[iX][iY]));
             constructNode(&(sim->tmpLattice[iX][iY]));
+#endif            
         }
     }
-}
-
-void constructSim_blk(Simulation* sim, int lx, int ly) {
-    printf("Enter constructSim_blk\n");
-
-    sim->lx = lx;
-    sim->ly = ly;
-
-    sim->memoryChunk    =
-        (Node*) calloc((lx+2)*(ly+2), sizeof(Node));
-    sim->tmpMemoryChunk =
-        (Node*) calloc((lx+2)*(ly+2), sizeof(Node));
-
-    sim->lattice        = (Node**) calloc(lx+2, sizeof(Node*));
-    sim->tmpLattice     = (Node**) calloc(lx+2, sizeof(Node*));
-
-    int iX, iY,  iix, iiy;
-    for (iX=1; iX<=lx; iX+=blk_size) {
-        for (iY=1; iY<=ly; iY+=blk_size) {
-            for(iix = 0; iix < blk_size; iix++){
-
-                printf("iX=%d, iY=%d, iix=%d\n", iX, iY, iix);
-                printf("current blk_line position=%d\n", iix*blk_size + (iY-1) * blk_size + (iX-1) * ly);
-                sim->lattice[iX+iix] = sim->memoryChunk + iix*blk_size + (iY-1) * blk_size  + (iX-1) * ly; 
-                sim->tmpLattice[iX+iix] = sim->tmpMemoryChunk + iix*blk_size + (iY-1) * blk_size  + (iX-1) * ly;
-
-                printf("cur_position\n ");
-                for(iiy = 0; iiy < blk_size; iiy++){
-
-                    printf("[%d:%d] -> %d ", iX+iix, iY+iiy, iiy + iix*blk_size + (iY-1) * blk_size + (iX-1) * ly);
-                    constructNode(&(sim->lattice[iX+iix][iY+iiy]));
-                    constructNode(&(sim->tmpLattice[iX+iix][iY+iiy]));
-                }    
-                printf("\n");
-            }
-        }
-    }
-
-    Node* after = sim->memoryChunk + lx*ly;
-    Node* tmpAfter = sim->tmpMemoryChunk + lx*ly;
-
-    //left
-    printf("left:");
-    for(iY=0; iY<ly+2; ++iY){
-        sim->lattice[0] = after;
-        sim->tmpLattice[0] = tmpAfter;
-
-        iX=0;
-        printf("[%d:%d] -> %d ", iX, iY, lx*ly + iY);
-        constructNode(&(sim->lattice[0][iY]));
-        constructNode(&(sim->tmpLattice[0][iY]));
-    }
-    printf("\n");
-
-    //right
-    printf("right:");
-    for(iY=0; iY<ly+2; ++iY){
-        sim->lattice[lx+1] = after + ly + 2;
-        sim->tmpLattice[lx+1] = tmpAfter + ly + 2;
-        
-        iX=lx+1;
-        printf("[%d:%d] -> %d ", iX, iY, lx*ly + ly + 2 + iY);
-
-        constructNode(&(sim->lattice[lx+1][iY]));
-        constructNode(&(sim->tmpLattice[lx+1][iY]));
-    }
-    printf("\n");
-
-    //bottom
-    printf("bottom:");
-    for(iX=1; iX<lx+1; ++iX){
-        sim->lattice[iX] = after + 2 * (ly + 2);
-        sim->tmpLattice[iX] = tmpAfter + 2 * (ly + 2);
-
-        iY=0;
-        printf("[%d:%d] -> %d ", iX, iY, lx*ly + 2*(ly + 2) + iX - 1);
-
-        constructNode(&(sim->lattice[iX][0]));
-        constructNode(&(sim->tmpLattice[iX][0]));
-    }
-    printf("\n");
-
-    //up
-    printf("up:");
-    for(iX=1; iX<lx+1; ++iX){
-        sim->lattice[iX] = after + 2 * (ly + 2) + lx;
-        sim->tmpLattice[iX] = tmpAfter + 2 * (ly + 2) + lx;
-
-        iY=ly+1;
-        printf("[%d:%d] -> %d ", iX, iY, lx*ly + 2*(ly + 2) + lx + iX - 1);
-
-        constructNode(&(sim->lattice[iX][ly+1]));
-        constructNode(&(sim->tmpLattice[iX][ly+1]));
-    }
-    printf("\n");
-
 }
 
   // free the memory for the simulation ("destructor")
@@ -1056,6 +1099,7 @@ void collide_tight_block(Simulation* sim) {
 #ifdef ZGB
                         //save rho
                         if( (iX+iix)==(lx-1) ){
+
                             //store rho from column iX=lx-2, iY=2~ly-1 need to be computed; iY=1, ly also computed but not used
                             computeMacros(sim->tmpLattice[iX+iix-1][iY+iiy-1].fPop, &myrho2[iY+iiy-1], &ux2, &uy2);
                         }
@@ -1066,6 +1110,7 @@ void collide_tight_block(Simulation* sim) {
                         // step 3: second collision on line x-1, y-1
                         // should be based on the result of first stream
                         // how to get velocity from direction 6 and 5(need 1 offset in x direction too)?
+
                         collideNode(&(sim->tmpLattice[iX+iix-1][iY+iiy-1]));
 
                         // another branch for iX=sim->lx-1 and iY=sim-lx-2

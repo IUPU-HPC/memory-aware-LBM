@@ -259,7 +259,6 @@ int main(int argc, char *argv[]) {
     int i;
     char case_name[80], filename[80];
 
-    void (*constructSim_func)(Simulation*, int, int) = NULL;
     void (*collision_func)(Simulation *) = NULL;
     void (*stream_func)(Simulation *) = NULL;
 
@@ -289,7 +288,6 @@ int main(int argc, char *argv[]) {
         #ifdef ADDPAPI
         sprintf(case_name, "combine_papi");
         #endif
-        constructSim_func = &constructSim;
         collision_func=&collide_with_stream;
 
   #ifdef _OPENMP
@@ -304,7 +302,6 @@ int main(int argc, char *argv[]) {
 #elif defined(QUICKTEST)
     #define TWOSTEPS
         sprintf(case_name, "quicktest");
-        constructSim_func = &constructSim;
         collision_func=&collide_with_stream_twice;
         stream_func=&finalize_stream;
 
@@ -314,7 +311,6 @@ int main(int argc, char *argv[]) {
         #ifdef ADDPAPI
         sprintf(case_name, "tight_papi");
         #endif
-        constructSim_func = &constructSim;
         collision_func=&collide_tight;
 
     #ifdef _OPENMP
@@ -338,7 +334,6 @@ int main(int argc, char *argv[]) {
         #ifdef ADDPAPI
         sprintf(case_name, "tight_block_papi");
         #endif
-        constructSim_func = &constructSim_blk;
         collision_func=&collide_tight_block;
     #ifdef _OPENMP
         sprintf(case_name, "tight_block_openmp");
@@ -356,7 +351,6 @@ int main(int argc, char *argv[]) {
         #ifdef ADDPAPI
         sprintf(case_name, "panel_papi");
         #endif
-        constructSim_func = &constructSim;
         // collision_func=&collide_tight_panel_ix;
         collision_func=&collide_tight_panel_iy;
     #ifdef _OPENMP
@@ -374,7 +368,6 @@ int main(int argc, char *argv[]) {
         #ifdef ADDPAPI
         sprintf(case_name, "origin_papi");
         #endif
-        constructSim_func = &constructSim;
         collision_func=&collide;
         stream_func=&propagate;
     #ifdef _OPENMP
@@ -398,7 +391,7 @@ int main(int argc, char *argv[]) {
 
     // allocae space for nodes and lattice
     // set configurations
-    constructSim_func(&sim, lx, ly);
+    constructSim(&sim, lx, ly);
     printf("Pass constructSim\n");
     // fflush(stdout);
 

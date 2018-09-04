@@ -89,7 +89,7 @@ typedef struct {
     int lx, ly;               // lx*ly lattice
     Node*  memoryChunk;       // contiguous raw memory
     Node*  tmpMemoryChunk;    // contiguous raw tmp memory
-    Node*  tmpMemoryChunk2;
+
     Node** lattice;           // lattice, points to raw memory
     Node** tmpLattice;        // tmp lasttice, points to raw memory
 } Simulation;
@@ -116,7 +116,7 @@ void collide_tight_panel_iy_openmp(Simulation* sim);
 void finalize_tight(Simulation* sim);
 
 void constructSim(Simulation* sim, int lx, int ly);
-void constructSim_blk(Simulation* sim, int lx, int ly);
+int map(Simulation* sim, Node* rawMem, int ix, int iy);
 void destructSim(Simulation* sim);
 void setDynamics(Simulation* sim, int iX, int iY, Dynamics* dyn);
 
