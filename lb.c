@@ -66,7 +66,7 @@ static const int c[9][2] = {
 void constructNode(Node* node) {
     int iPop;
     for (iPop=0; iPop<9; ++iPop) {
-        node->fPop[iPop] = 0.1;
+        node->fPop[iPop] = 0.;
     }
     node->dynamics = 0;
 }
@@ -84,7 +84,7 @@ void iniEquilibrium(Node* node, double rho, double ux, double uy) {
 
 /* struct Simulation, methods                                    */
 /*****************************************************************/
-int map(Simulation* sim, Node* rawMem, int ix, int iy){
+Node* map(Simulation* sim, Node* rawMem, int ix, int iy){
 
     int iX, iY, iix, iiy, pos;
     int lx = sim->lx, ly=sim->ly;
@@ -98,123 +98,120 @@ int map(Simulation* sim, Node* rawMem, int ix, int iy){
         iiy = iy;
 
         pos = iiy + iix*(b+1);
-        printf("A: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);
+        /*printf("A: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);*/
 
-        return pos;
-        /*return rawMem + pos;*/
-    }
-    
+        /*return pos;*/
+        return rawMem + pos;
+    }    
     //left middle 
-    if(ix <= b && b<iy && iy<=(ly-b)){ 
+    else if(ix <= b && b<iy && iy<=(ly-b)){ 
         iX = 0;
         iY = (iy-b-1) / b + 1;
         iix = ix;
         iiy = (iy-b-1) % b;
 
         pos = (b+1)*(b+1) + iiy + iix*b + (iY-1) * (b+1) * b; 
-        printf("B: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);
+        /*printf("B: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);*/
 
-        return pos;
-        /*return rawMem + pos;*/
+        /*return pos;*/
+        return rawMem + pos;
     }
-
     //left up corner
-    if(ix <= b && iy>(ly-b)){ 
+    else if(ix <= b && iy>(ly-b)){ 
         iX = 0;
         iY = ly / b - 1;
         iix = ix;
         iiy = iy-(ly-b+1);
 
         pos = (b+1)*(ly-b+1) + iiy + iix*(b+1);
-        printf("C: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);
+        /*printf("C: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);*/
 
-        return pos;
-        /*return rawMem + pos;*/
+        /*return pos;*/
+        return rawMem + pos;
     }
-
     //bottom middle
-    if(b < ix && ix <= (lx-b) && iy<=b){ 
+    else if(b < ix && ix <= (lx-b) && iy<=b){ 
         iX = (ix-b-1) / b + 1;
         iY = 0;
         iix = (ix-b-1) % b;
         iiy = iy;
 
         pos = (b+1)*(ly+2)+b*(ly+2)*(iX-1) + iiy + iix*(b+1);
-        printf("D: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);
+        /*printf("D: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);*/
 
-        return pos;
-        /*return rawMem + pos;*/
+        /*return pos;*/
+        return rawMem + pos;
     }
-
     //middle
-    if(b < ix && ix <= (lx-b) && b<iy && iy<=(ly-b)){ 
+    else if(b < ix && ix <= (lx-b) && b<iy && iy<=(ly-b)){ 
         iX = (ix-b-1) / b + 1;
         iY = (iy-b-1) / b + 1;
         iix = (ix-b-1) % b;
         iiy = (iy-b-1) % b;
 
         pos = (b+1)*(ly+2)+b*(ly+2)*(iX-1) + b*(b+1) + iiy + iix*b + (iY-1)*b*b;
-        printf("E: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);
+        /*printf("E: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);*/
 
-        return pos;
-        /*return rawMem + pos;*/
+        /*return pos;*/
+        return rawMem + pos;
     }
-
     //up up
-    if(b < ix && ix <= (lx-b) && iy>(ly-b)){ 
+    else if(b < ix && ix <= (lx-b) && iy>(ly-b)){ 
         iX = (ix-b-1) / b + 1;
         iY = ly / b - 1;
         iix = (ix-b-1) % b;
         iiy = iy-(ly-b+1);
 
         pos = (b+1)*(ly+2)+b*(ly+2)*(iX-1) + b*(ly-b+1) + iiy + iix*(b+1);
-        printf("F: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);
+        /*printf("F: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);*/
 
-        return pos;
-        /*return rawMem + pos;*/
+        /*return pos;*/
+        return rawMem + pos;
     }
-
     //right bottom corner
-    if(ix > (lx-b) && iy<=b){ 
+    else if(ix > (lx-b) && iy<=b){ 
         iX = lx / b - 1;
         iY = 0;
         iix = ix-(lx-b+1);
         iiy = iy;
 
         pos = (lx-b+1)*(ly+2) + iiy + iix*(b+1);
-        printf("G: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);
+        /*printf("G: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);*/
 
-        return pos;
-        /*return rawMem + pos;*/
+        /*return pos;*/
+        return rawMem + pos;
     }
-
     //right middle
-    if(ix > (lx-b) && b<iy && iy<=(ly-b)){ 
+    else if(ix > (lx-b) && b<iy && iy<=(ly-b)){ 
         iX = lx / b - 1;
         iY = (iy-b-1) / b + 1;
         iix = ix-(lx-b+1);
         iiy = (iy-b-1) % b;
 
         pos = (lx-b+1)*(ly+2) + (b+1)*(b+1) + iiy + iix*b + (iY-1)*(b+1)*b;
-        printf("H: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);
+        /*printf("H: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);*/
 
-        return pos;
-        /*return rawMem + pos;*/
+        /*return pos;*/
+        return rawMem + pos;
     }
-
     //right up corner 
-    if(ix > (lx-b) && iy>(ly-b)){ 
+    else if(ix > (lx-b) && iy>(ly-b)){ 
         iX = lx / b - 1;
         iY = ly / b - 1;
         iix = ix-(lx-b+1);
         iiy = iy-(ly-b+1);
 
         pos = (lx-b+1)*(ly+2)+(b+1)*(ly-b+1) + iiy + iix*(b+1);
-        printf("I: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);
+        /*printf("I: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);*/
 
-        return pos;
-        /*return rawMem + pos;*/
+        /*return pos;*/
+        return rawMem + pos;
     }
+    else{
+        fprintf(stderr, "no mapping is detected\n");
+        fflush(stderr);
+        abort();
+    }    
 
 }
 
@@ -240,11 +237,14 @@ void constructSim(Simulation* sim, int lx, int ly) {
         sim->tmpLattice[iX] = sim->tmpMemoryChunk + iX*(ly+2);
         for (iY=0; iY<ly+2; ++iY) {
 #if defined(TIGHT_BLOCK)            
-            int m = map(sim, sim->memoryChunk, iX, iY);
-            int tmpM = map(sim, sim->tmpMemoryChunk, iX, iY); 
-            printf("m=%d, iX=%d, iY=%d\n", m, iX, iY);
-            constructNode(sim->memoryChunk+m);
-            constructNode(sim->tmpMemoryChunk+tmpM);
+/*            int m = map(sim, sim->memoryChunk, iX, iY);*/
+            /*int tmpM = map(sim, sim->tmpMemoryChunk, iX, iY); */
+            /*printf("m=%d, iX=%d, iY=%d\n", m, iX, iY);*/
+            /*constructNode(sim->memoryChunk+m);*/
+            /*constructNode(sim->tmpMemoryChunk+tmpM);*/
+            constructNode(map(sim, sim->memoryChunk, iX, iY));
+            constructNode(map(sim, sim->tmpMemoryChunk, iX, iY));
+           
 #else
             constructNode(&(sim->lattice[iX][iY]));
             constructNode(&(sim->tmpLattice[iX][iY]));
@@ -264,8 +264,13 @@ void destructSim(Simulation* sim) {
 
   // specify the dynamics for a given lattice site
 void setDynamics(Simulation* sim, int iX, int iY, Dynamics *dyn) {
+#if defined (TIGHT_BLOCK)
+    (*map(sim, sim->memoryChunk, iX, iY)).dynamics = dyn;
+    (*map(sim, sim->tmpMemoryChunk, iX, iY)).dynamics = dyn;
+#else
     sim->lattice[iX][iY].dynamics = dyn;
     sim->tmpLattice[iX][iY].dynamics = dyn;
+#endif    
 }
 
   // apply collision step to a lattice node (and simulate
@@ -1084,15 +1089,18 @@ void collide_tight_block(Simulation* sim) {
                 for(iiy = 0; iiy < blk_size; iiy++){
 
                     // step1: collision on this line y
-                    collideNode(&(sim->lattice[iX+iix][iY+iiy]));
+                    /*collideNode(&(sim->lattice[iX+iix][iY+iiy]));*/
+                    collideNode(map(sim, sim->memoryChunk, iX+iix, iY+iiy));
 
                     // step 2: stream from line x-1 to x
                     for (iPop=0; iPop<9; ++iPop) {
                         //iPop=below[index];
                         nextX = iX+iix + c[iPop][0];
                         nextY = iY+iiy + c[iPop][1];
-                        sim->tmpLattice[nextX][nextY].fPop[iPop] =
-                            sim->lattice[iX+iix][iY+iiy].fPop[iPop];
+/*                        sim->tmpLattice[nextX][nextY].fPop[iPop] =*/
+                            /*sim->lattice[iX+iix][iY+iiy].fPop[iPop];*/
+                         (*map(sim, sim->tmpMemoryChunk, nextX, nextY)).fPop[iPop] =
+                            (*map(sim, sim->memoryChunk, iX+iix, iY+iiy)).fPop[iPop];
                     }
 
                     if(iX+iix>1 && iY+iiy>1){
@@ -1101,17 +1109,20 @@ void collide_tight_block(Simulation* sim) {
                         if( (iX+iix)==(lx-1) ){
 
                             //store rho from column iX=lx-2, iY=2~ly-1 need to be computed; iY=1, ly also computed but not used
-                            computeMacros(sim->tmpLattice[iX+iix-1][iY+iiy-1].fPop, &myrho2[iY+iiy-1], &ux2, &uy2);
+                            /*computeMacros(sim->tmpLattice[iX+iix-1][iY+iiy-1].fPop, &myrho2[iY+iiy-1], &ux2, &uy2);*/
+                            computeMacros((*map(sim, sim->tmpMemoryChunk, iX+iix-1, iY+iiy-1)).fPop, &myrho2[iY+iiy-1], &ux2, &uy2);
                         }
                         if( (iX+iix)==lx ){
-                            computeMacros(sim->tmpLattice[iX+iix-1][iY+iiy-1].fPop, &myrho1[iY+iiy-1], &ux1, &uy1);
+                            /*computeMacros(sim->tmpLattice[iX+iix-1][iY+iiy-1].fPop, &myrho1[iY+iiy-1], &ux1, &uy1);*/
+                            computeMacros((*map(sim, sim->tmpMemoryChunk, iX+iix-1, iY+iiy-1)).fPop, &myrho1[iY+iiy-1], &ux1, &uy1);
                         }
 #endif
                         // step 3: second collision on line x-1, y-1
                         // should be based on the result of first stream
                         // how to get velocity from direction 6 and 5(need 1 offset in x direction too)?
 
-                        collideNode(&(sim->tmpLattice[iX+iix-1][iY+iiy-1]));
+                        /*collideNode(&(sim->tmpLattice[iX+iix-1][iY+iiy-1]));*/
+                        collideNode(map(sim, sim->tmpMemoryChunk, iX+iix-1, iY+iiy-1));
 
                         // another branch for iX=sim->lx-1 and iY=sim-lx-2
 
@@ -1119,9 +1130,11 @@ void collide_tight_block(Simulation* sim) {
                         for (iPop=0; iPop<9; ++iPop) {
                             nextX = iX + iix -1 + c[iPop][0];
                             nextY = iY + iiy -1 + c[iPop][1];
-                            sim->lattice[nextX][nextY].fPop[iPop] =
-                                sim->tmpLattice[iX+iix-1][iY+ iiy -1].fPop[iPop];
-                        }
+/*                           sim->lattice[nextX][nextY].fPop[iPop] =*/
+                                /*sim->tmpLattice[iX+iix-1][iY+iiy-1].fPop[iPop];*/
+                            (*map(sim, sim->memoryChunk, nextX, nextY)).fPop[iPop] =
+                                (*map(sim, sim->tmpMemoryChunk, iX+iix-1, iY+iiy-1)).fPop[iPop];
+                       }
                     }
                 }
             }
@@ -1131,27 +1144,33 @@ void collide_tight_block(Simulation* sim) {
     //Line iX=1~lx-1, y=ly need to compute one more time
     // iY=sim->ly;
     for(iX=1; iX<sim->lx; ++iX){
-        collideNode(&(sim->tmpLattice[iX][ly]));
+        /*collideNode(&(sim->tmpLattice[iX][ly]));*/
+        collideNode(map(sim, sim->tmpMemoryChunk, iX, ly));
 
         for (iPop=0; iPop<9; ++iPop) {
             nextX = iX + c[iPop][0];
             nextY = ly + c[iPop][1];
-            sim->lattice[nextX][nextY].fPop[iPop] =
-                sim->tmpLattice[iX][ly].fPop[iPop];
-        }
+            /*sim->lattice[nextX][nextY].fPop[iPop] =*/
+                /*sim->tmpLattice[iX][ly].fPop[iPop];*/
+            (*map(sim, sim->memoryChunk, nextX, nextY)).fPop[iPop] =
+                (*map(sim, sim->tmpMemoryChunk, iX, ly)).fPop[iPop];
+       }
     }
 
     //Line iY=1~ly, iX=lx need to compute one more time
     // iX=sim->lx;
     //simple optimize
     iY=1;
-    collideNode(&(sim->tmpLattice[lx][iY]));
+    /*collideNode(&(sim->tmpLattice[lx][iY]));*/
+    collideNode(map(sim, sim->tmpMemoryChunk, lx, iY));
     for (iPop=0; iPop<9; ++iPop) {
         nextX = lx + c[iPop][0];
         nextY = iY + c[iPop][1];
-        sim->lattice[nextX][nextY].fPop[iPop] =
-            sim->tmpLattice[lx][iY].fPop[iPop];
-    }
+        /*sim->lattice[nextX][nextY].fPop[iPop] =*/
+            /*sim->tmpLattice[lx][iY].fPop[iPop];*/
+        (*map(sim, sim->memoryChunk, nextX, nextY)).fPop[iPop] =
+            (*map(sim, sim->tmpMemoryChunk, lx, iY)).fPop[iPop];
+   }
 
     for (iY=2; iY<sim->ly; ++iY){
 
@@ -1160,25 +1179,31 @@ void collide_tight_block(Simulation* sim) {
         pressureBoundary[iY].rho = 4./3.* myrho1[iY] - 1./3.* myrho2[iY];
         pressureBoundary[iY].uPar = 0.;
 #endif
-        collideNode(&(sim->tmpLattice[lx][iY]));
+        /*collideNode(&(sim->tmpLattice[lx][iY]));*/
+        collideNode(map(sim, sim->tmpMemoryChunk, lx, iY));
 
         for (iPop=0; iPop<9; ++iPop) {
             nextX = lx + c[iPop][0];
             nextY = iY + c[iPop][1];
-            sim->lattice[nextX][nextY].fPop[iPop] =
-                sim->tmpLattice[lx][iY].fPop[iPop];
-        }
+            /*sim->lattice[nextX][nextY].fPop[iPop] =*/
+                /*sim->tmpLattice[lx][iY].fPop[iPop];*/
+            (*map(sim, sim->memoryChunk, nextX, nextY)).fPop[iPop] =
+                (*map(sim, sim->tmpMemoryChunk, lx, iY)).fPop[iPop];
+       }
     }
 
     //compute lx, ly point
-    collideNode(&(sim->tmpLattice[lx][ly]));
+    /*collideNode(&(sim->tmpLattice[lx][ly]));*/
+    collideNode(map(sim, sim->tmpMemoryChunk, lx, ly));
 
     for (iPop=0; iPop<9; ++iPop) {
         nextX = lx + c[iPop][0];
         nextY = ly + c[iPop][1];
-        sim->lattice[nextX][nextY].fPop[iPop] =
-            sim->tmpLattice[lx][ly].fPop[iPop];
-    }
+        /*sim->lattice[nextX][nextY].fPop[iPop] =*/
+            /*sim->tmpLattice[lx][ly].fPop[iPop];*/
+        (*map(sim, sim->memoryChunk, nextX, nextY)).fPop[iPop] =
+            (*map(sim, sim->tmpMemoryChunk, lx, ly)).fPop[iPop];
+   }
 
 #ifdef ADDPAPI
         retval=PAPI_stop_counters(value_CM, NUM_EVENTS);
@@ -1967,7 +1992,11 @@ void saveVel(Simulation* sim, char fName[]) {
     // save vx, vy for paraview+catalyst
     for (iY=1; iY<=sim->ly; ++iY) {
        for (iX=1; iX<=sim->lx; ++iX) {
+#if defined (TIGHT_BLOCK)           
+           computeMacros((*map(sim, sim->memoryChunk, iX, iY)).fPop, &rho, &ux, &uy);
+#else           
            computeMacros(sim->lattice[iX][iY].fPop, &rho, &ux, &uy);
+#endif           
            fprintf(oFile, "%f,%f,%f\n", ux, tmp, uy);
        }
     }
@@ -1983,7 +2012,11 @@ void saveF(Simulation* sim, int iPop, char fName[]) {
 
     for (iY=1; iY<=sim->ly; ++iY) {
        for (iX=1; iX<=sim->lx; ++iX) {
+#if defined (TIGHT_BLOCK)           
+           double f = (*map(sim, sim->memoryChunk, iX, iY)).fPop[iPop];
+#else           
            double f = sim->lattice[iX][iY].fPop[iPop];
+#endif           
            fprintf(oFile, "%f ", f);
        }
        fprintf(oFile, "\n");

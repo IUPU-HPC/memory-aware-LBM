@@ -116,7 +116,7 @@ void collide_tight_panel_iy_openmp(Simulation* sim);
 void finalize_tight(Simulation* sim);
 
 void constructSim(Simulation* sim, int lx, int ly);
-int map(Simulation* sim, Node* rawMem, int ix, int iy);
+Node* map(Simulation* sim, Node* rawMem, int ix, int iy);
 void destructSim(Simulation* sim);
 void setDynamics(Simulation* sim, int iX, int iY, Dynamics* dyn);
 

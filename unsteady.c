@@ -175,7 +175,11 @@ void iniGeometry() {
               // density and a velocity determined by a y-dependend Poiseuille
               // profile.
             double uPoiseuille = computePoiseuille(iY);
+#if defined (TIGHT_BLOCK)
+            iniEquilibrium(map(&sim, sim.memoryChunk, iX, iY), 1., uPoiseuille, 0.);
+#else            
             iniEquilibrium(&sim.lattice[iX][iY], 1., uPoiseuille, 0.);
+#endif            
               // on the obstacle, set bounce back dynamics
             if ( (iX-obst_x)*(iX-obst_x) +
                  (iY-obst_y)*(iY-obst_y) <= obst_r*obst_r )
@@ -218,8 +222,13 @@ void updateZeroGradientBoundary() {
     int iY;
     double rho1, ux1, uy1, rho2, ux2, uy2;
     for (iY=2; iY<=ly-1; ++iY) {
+#if defined (TIGHT_BLOCK)
+        computeMacros((*map(&sim, sim.memoryChunk, lx-1, iY)).fPop, &rho1, &ux1, &uy1);
+        computeMacros((*map(&sim, sim.memoryChunk, lx-2, iY)).fPop, &rho2, &ux2, &uy2);
+#else               
         computeMacros(sim.lattice[lx-1][iY].fPop, &rho1, &ux1, &uy1);
         computeMacros(sim.lattice[lx-2][iY].fPop, &rho2, &ux2, &uy2);
+#endif        
         pressureBoundary[iY].rho = 4./3.*rho1 - 1./3.*rho2;
         pressureBoundary[iY].uPar = 0.; //uy=0
 
@@ -455,7 +464,7 @@ int main(int argc, char *argv[]) {
         /*if (iT%tSave==0) {*/
             /*printf("iT=%d, save, count=%d\n", iT, count);*/
             /*fflush(stdout);*/
-            /*sprintf(filename, "vel_%s_%d.dat", case_name, count);*/
+            /*sprintf(filename, "vel_before_%s_%d.dat", case_name, count);*/
             /*saveVel(&sim, filename);*/
             /*count++;*/
         /*}*/
