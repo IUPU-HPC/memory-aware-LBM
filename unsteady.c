@@ -176,7 +176,7 @@ void iniGeometry() {
               // profile.
             double uPoiseuille = computePoiseuille(iY);
 #if defined (TIGHT_BLOCK)
-            iniEquilibrium(map(&sim, sim.memoryChunk, iX, iY), 1., uPoiseuille, 0.);
+            iniEquilibrium(sim.memoryChunk+sim.map_matrix[iX][iY], 1., uPoiseuille, 0.);
 #else            
             iniEquilibrium(&sim.lattice[iX][iY], 1., uPoiseuille, 0.);
 #endif            
@@ -223,8 +223,8 @@ void updateZeroGradientBoundary() {
     double rho1, ux1, uy1, rho2, ux2, uy2;
     for (iY=2; iY<=ly-1; ++iY) {
 #if defined (TIGHT_BLOCK)
-        computeMacros((*map(&sim, sim.memoryChunk, lx-1, iY)).fPop, &rho1, &ux1, &uy1);
-        computeMacros((*map(&sim, sim.memoryChunk, lx-2, iY)).fPop, &rho2, &ux2, &uy2);
+        computeMacros((*(sim.memoryChunk+sim.map_matrix[lx-1][iY])).fPop, &rho1, &ux1, &uy1);
+        computeMacros((*(sim.memoryChunk+sim.map_matrix[lx-2][iY])).fPop, &rho2, &ux2, &uy2);
 #else               
         computeMacros(sim.lattice[lx-1][iY].fPop, &rho1, &ux1, &uy1);
         computeMacros(sim.lattice[lx-2][iY].fPop, &rho2, &ux2, &uy2);
@@ -460,15 +460,15 @@ int main(int argc, char *argv[]) {
         }
 
         //save before computing
-/*#ifndef NO_SAVE*/
-        /*if (iT%tSave==0) {*/
-            /*printf("iT=%d, save, count=%d\n", iT, count);*/
-            /*fflush(stdout);*/
-            /*sprintf(filename, "vel_before_%s_%d.dat", case_name, count);*/
-            /*saveVel(&sim, filename);*/
-            /*count++;*/
-        /*}*/
-/*#endif*/
+#ifndef NO_SAVE
+        if (iT%tSave==0) {
+            printf("iT=%d, save, count=%d\n", iT, count);
+            fflush(stdout);
+            sprintf(filename, "vel_before_%s_%d.dat", case_name, count);
+            saveVel(&sim, filename);
+            count++;
+        }
+#endif
 
 #ifdef ZGB
         t0 = get_cur_time();
