@@ -11,8 +11,8 @@ project("SimpleLBM")
 #set(CMAKE_C_FLAGS "-O3")
 message(STATUS "CMAKE_C_FLAGS=${CMAKE_C_FLAGS} is loaded...")
 include_directories(${PAPI_ROOT}/include)
-find_library(PAPILIB papi ${PAPI_ROOT}/lib)
-#find_library(PAPILIB libpapi.a ${PAPI_ROOT}/lib)
+#find_library(PAPILIB papi ${PAPI_ROOT}/lib)
+find_library(PAPILIB libpapi.a ${PAPI_ROOT}/lib)
 
 # find openmp
 find_package(OpenMP)

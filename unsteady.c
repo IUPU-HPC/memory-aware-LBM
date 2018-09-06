@@ -176,7 +176,8 @@ void iniGeometry() {
               // profile.
             double uPoiseuille = computePoiseuille(iY);
 #if defined (TIGHT_BLOCK)
-            iniEquilibrium(sim.memoryChunk+sim.map_matrix[iX][iY], 1., uPoiseuille, 0.);
+            int pos = CALC_POS(iX,iY);
+            iniEquilibrium(sim.memoryChunk+pos, 1., uPoiseuille, 0.);
 #else            
             iniEquilibrium(&sim.lattice[iX][iY], 1., uPoiseuille, 0.);
 #endif            
@@ -223,8 +224,8 @@ void updateZeroGradientBoundary() {
     double rho1, ux1, uy1, rho2, ux2, uy2;
     for (iY=2; iY<=ly-1; ++iY) {
 #if defined (TIGHT_BLOCK)
-        computeMacros((*(sim.memoryChunk+sim.map_matrix[lx-1][iY])).fPop, &rho1, &ux1, &uy1);
-        computeMacros((*(sim.memoryChunk+sim.map_matrix[lx-2][iY])).fPop, &rho2, &ux2, &uy2);
+        computeMacros((*(sim.memoryChunk+CALC_POS(lx-1,iY))).fPop, &rho1, &ux1, &uy1);
+        computeMacros((*(sim.memoryChunk+CALC_POS(lx-2,iY))).fPop, &rho2, &ux2, &uy2);
 #else               
         computeMacros(sim.lattice[lx-1][iY].fPop, &rho1, &ux1, &uy1);
         computeMacros(sim.lattice[lx-2][iY].fPop, &rho2, &ux2, &uy2);

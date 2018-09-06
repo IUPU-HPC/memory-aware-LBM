@@ -90,16 +90,13 @@ typedef struct {
     Node*  memoryChunk;       // contiguous raw memory
     Node*  tmpMemoryChunk;    // contiguous raw tmp memory
     
-//#if defined(TIGHT_BLOCK)    
-    int** map_matrix;         // map geometry coordinate to raw memory index
-//#endif
-    
     Node** lattice;           // lattice, points to raw memory
     Node** tmpLattice;        // tmp lasttice, points to raw memory
 } Simulation;
 
 /* added by lifeng & Yuankun Fu                                */
 /*****************************************************************/
+#define CALC_POS(X,Y) (Y-1)%blk_size+((X-1)%blk_size)*blk_size+(Y-1)*blk_size+(X-1)*ly
 void updateZeroGradientBoundary();
 
 void collide_with_stream(Simulation* sim);
