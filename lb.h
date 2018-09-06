@@ -96,7 +96,7 @@ typedef struct {
 
 /* added by lifeng & Yuankun Fu                                */
 /*****************************************************************/
-#define CALC_POS(X,Y) (Y-1)%blk_size+((X-1)%blk_size)*blk_size+(Y-1)*blk_size+(X-1)*ly
+#define CALC_POS(X,Y) (Y-1)%blk_size+((X-1)%blk_size)*blk_size+((Y-1)/blk_size)*blk_size*blk_size+((X-1)/blk_size)*blk_size*ly
 void updateZeroGradientBoundary();
 
 void collide_with_stream(Simulation* sim);

@@ -178,6 +178,7 @@ void destructSim(Simulation* sim) {
 void setDynamics(Simulation* sim, int iX, int iY, Dynamics *dyn) {
 #if defined (TIGHT_BLOCK)
     int pos = map(sim, iX, iY);
+    /*printf("iX=%d, iY=%d, pos=%d\n", iX, iY, pos);*/
     (*(sim->memoryChunk+pos)).dynamics = dyn;
     (*(sim->tmpMemoryChunk+pos)).dynamics = dyn;
 #else

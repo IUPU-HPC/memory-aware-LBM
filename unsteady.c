@@ -108,7 +108,7 @@ void setConstants(int argc, char *argv[]) {
     omega = 1. / (3*nu+1./2.);      // relaxation parameter
 
     maxT   = atoi(getenv("STOP"));       // total number of iterations
-    tSave  = 100;          // frequency of periodic saves to disk
+    tSave  = 2;          // frequency of periodic saves to disk
 
     printf("\nlx=%d, ly=%d, omega=%f, blk_size=%d\n\n", lx, ly, omega, blk_size);
 }
