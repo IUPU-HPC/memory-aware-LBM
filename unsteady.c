@@ -35,7 +35,7 @@
 #include <stdlib.h>
 #include "eval_tools.h"
 
-/*#define NO_SAVE*/
+#define NO_SAVE
 /*#define DEBUG*/
 
   // These constants define the flow geometry and are commented in
