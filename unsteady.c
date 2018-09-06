@@ -35,7 +35,8 @@
 #include <stdlib.h>
 #include "eval_tools.h"
 
-#define NO_SAVE
+/*#define NO_SAVE*/
+/*#define DEBUG*/
 
   // These constants define the flow geometry and are commented in
   //   the function setConstants()
@@ -263,7 +264,33 @@ void Hello(void){
   printf("Hello from thread %d of %d\n", my_rank, thread_count);
 }
 
+#if defined (DEBUG)
+void test_map(Simulation* sim){
 
+    int iX, iY;
+    int lx=sim->lx, ly=sim->ly;
+/*    for(iX=0; iX<=lx+1; ++iX) {*/
+        /*for(iY=0; iY<=ly+1; ++iY) {*/
+            /*printf("[%d][%d]->%d\n", iX, iY, map(sim, iX, iY));*/
+        /*}*/
+    /*}*/
+
+    int iix, iiy;
+    int pos;
+    for (iX=1; iX<=sim->lx; iX+=blk_size) 
+        for (iY=1; iY<=sim->ly; iY+=blk_size) 
+            for(iix = 0; iix < blk_size; iix++)
+                for(iiy = 0; iiy < blk_size; iiy++) {
+                    pos = iiy + iix * blk_size + (iY-1)*blk_size + (iX-1)*ly;
+                    printf("[%d][%d]->%d\n", iix+iX, iiy+iY, pos);
+                    
+                    if(iX+iix>1 && iY+iiy>1){
+                        pos = iiy-1 + (iix-1) * blk_size + (iY-1)*blk_size + (iX-1)*ly;
+                        printf("[%d][%d]->%d\n", iix+iX-1, iiy+iY-1, pos);
+                    }
+                }
+}
+#endif
 
 int main(int argc, char *argv[]) {
     int i;
@@ -410,6 +437,12 @@ int main(int argc, char *argv[]) {
     printf("Pass iniGeometry, obst_x=%d, obst_y=%d, obst_r=%d\n",
              obst_x, obst_y, obst_r);
     fflush(stdout);
+    
+#if defined (TIGHT_BLOCK)    
+#if defined (DEBUG)
+    test_map(&sim);
+#endif
+#endif    
 
     double t_start, t_end, t0, t1, t_collid=0.0, t_zgb=0.0, t_stream=0.0;
     t_start = get_cur_time();

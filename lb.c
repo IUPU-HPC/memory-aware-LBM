@@ -106,14 +106,14 @@ int map(Simulation* sim, int ix, int iy){
     }
     //bottom ghost cell
     else if(iy == 0){ 
-        pos = lx*ly + 2*(ly+2) + ix;
+        pos = lx*ly + 2*(ly+2) + ix -1;
         /*printf("C: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);*/
 
         return pos;
     }
     //up ghost cell
     else if(iy == (ly+1)){ 
-        pos = lx*ly + 2*(ly+2) + lx + iy;
+        pos = lx*ly + 2*(ly+2) + lx + ix - 1;
         /*printf("D: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);*/
 
         return pos;
@@ -1006,6 +1006,7 @@ void collide_tight_block(Simulation* sim) {
                     // step1: collision on this line y
                     /*collideNode(&(sim->lattice[iX+iix][iY+iiy]));*/
                     pos = iiy + iix * blk_size + (iY-1)*blk_size + (iX-1)*ly;
+                    /*pos = CALC_POS(iX+iix, iY+iiy);*/
                     collideNode(sim->memoryChunk+pos);
                     /*new_pos = pos + iiy + iix*blk_size;*/
                     /*collideNode(sim->memoryChunk + new_pos);*/
@@ -1044,7 +1045,8 @@ void collide_tight_block(Simulation* sim) {
                         // how to get velocity from direction 6 and 5(need 1 offset in x direction too)?
 
                         /*collideNode(&(sim->tmpLattice[iX+iix-1][iY+iiy-1]));*/
-                        pos = iiy-1 + (iix-1) * blk_size + (iY-1)*blk_size + (iX-1)*ly;
+                        /*pos = iiy-1 + (iix-1) * blk_size + (iY-1)*blk_size + (iX-1)*ly;*/
+                        pos = CALC_POS(iX+iix-1, iY+iiy-1);
                         collideNode(sim->tmpMemoryChunk+pos);
                         /*new_next = next + iiy + iix*blk_size;*/
                         /*collideNode(sim->tmpMemoryChunk+new_next);*/
