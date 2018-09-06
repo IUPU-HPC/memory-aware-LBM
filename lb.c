@@ -1093,7 +1093,7 @@ void collide_tight_block(Simulation* sim) {
     /*int pos, new_pos, next, new_next;*/
     for (iX=1; iX<=sim->lx; iX+=blk_size) {
         for (iY=1; iY<=sim->ly; iY+=blk_size) {
-            pos = sim->map_matrix[iX][iY];
+            /*pos = sim->map_matrix[iX][iY];*/
             /*next = sim->map_matrix[iX-1][iY-1]; */
             for(iix = 0; iix < blk_size; iix++){
                 for(iiy = 0; iiy < blk_size; iiy++){
