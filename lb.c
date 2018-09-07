@@ -30,6 +30,7 @@
 #include "boundaries.h"
 extern PressureBCData* pressureBoundary;
 extern int blk_size;
+extern int move, move_y;
 extern double *myrho1, *myrho2;
 extern int iT, count;
 extern int thread_block;
@@ -88,8 +89,14 @@ int map(Simulation* sim, int ix, int iy){
 
     int iX, iY, iix, iiy, pos;
     int lx = sim->lx, ly=sim->ly;
-    int b = blk_size;
-   
+    /*int b = blk_size;*/
+    int m = ix*iy;
+
+    if (m!=0 && iy != (ly+1) && ix != (lx+1)) {
+       pos = CALC_POS(ix, iy);
+       /*printf("use CALC_POS\n");*/
+       return pos;
+    }
     //left ghost cell
     if(ix == 0){ 
         pos = lx*ly+iy;
@@ -119,23 +126,23 @@ int map(Simulation* sim, int ix, int iy){
         return pos;
     }
     // middle 
-    else{ 
-        /*iX = (ix-1) / b;*/
-        /*iY = (iy-1) / b;*/
-        /*iix = (ix-1) % b;*/
-        /*iiy = (iy-1) % b;*/
+/*    else{ */
+        /*[>iX = (ix-1) / b;<]*/
+        /*[>iY = (iy-1) / b;<]*/
+        /*[>iix = (ix-1) % b;<]*/
+        /*[>iiy = (iy-1) % b;<]*/
 
-        /*pos = iiy + iix*b + iY*b*b + iX*ly*b;*/
-        pos = CALC_POS(ix, iy);
-        /*printf("E: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);*/
+        /*[>pos = iiy + iix*b + iY*b*b + iX*ly*b;<]*/
+        /*pos = CALC_POS(ix, iy);*/
+        /*[>printf("E: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);<]*/
 
-        return pos;
-    }
-/*    else{*/
-        /*fprintf(stderr, "no mapping is detected\n");*/
-        /*fflush(stderr);*/
-        /*abort();*/
-    /*}    */
+        /*return pos;*/
+    /*}*/
+    else{
+        fprintf(stderr, "no mapping is detected\n");
+        fflush(stderr);
+        abort();
+    }    
 
 }
 

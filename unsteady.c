@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "eval_tools.h"
+#include <math.h>
 
 #define NO_SAVE
 /*#define DEBUG*/
@@ -48,6 +49,7 @@ int NUM_THREADS;
 
 /********************* added by Yuankun Fu ***********************/
 int blk_size;
+int move, move_y;
 double *myrho1, *myrho2;
 int iT=0, count;
 int thread_block;
@@ -97,6 +99,8 @@ void setConstants(int argc, char *argv[]) {
     lx = atoi(argv[1]);     //channel lenghth
     ly = atoi(argv[2]);     //channel width
     blk_size = atoi(argv[3]);
+    move  = log2(blk_size);
+    move_y = log2(ly); 
 
     /*obst_r = 8;   // radius of the cylinder*/
     obst_r = ly/10+1;   // radius of the cylinder
@@ -111,7 +115,7 @@ void setConstants(int argc, char *argv[]) {
     maxT   = atoi(getenv("STOP"));       // total number of iterations
     tSave  = 2;          // frequency of periodic saves to disk
 
-    printf("\nlx=%d, ly=%d, omega=%f, blk_size=%d\n\n", lx, ly, omega, blk_size);
+    printf("\nlx=%d, ly=%d, omega=%f, blk_size=%d, move=%d, move_y=%d\n\n", lx, ly, omega, blk_size, move, move_y);
 }
 
   // Memory allocation and default initialisation of the simulation
@@ -269,11 +273,17 @@ void test_map(Simulation* sim){
 
     int iX, iY;
     int lx=sim->lx, ly=sim->ly;
-/*    for(iX=0; iX<=lx+1; ++iX) {*/
-        /*for(iY=0; iY<=ly+1; ++iY) {*/
-            /*printf("[%d][%d]->%d\n", iX, iY, map(sim, iX, iY));*/
-        /*}*/
-    /*}*/
+    for(iX=0; iX<=lx+1; ++iX) {
+        for(iY=0; iY<=ly+1; ++iY) {
+/*#define CALC_POS(X,Y) (Y-1)%blk_size + (int)((int)((X-1)%blk_size) << move) + (int)(((int)((Y-1) >> move)) << (move+move)) + (int)(((int)((X-1) >> move)) << (move+move_y))*/
+            int a, b, c, d;
+            a = (iY-1)%blk_size;
+            b = ((iX-1)%blk_size) << move;
+            c = ((iY-1) >> move) << (move+move);
+            d = ((iX-1) >> move) << move * ly;
+            printf("[%d][%d]->%d, a=%d, b=%d, c=%d, d=%d\n", iX, iY, map(sim, iX, iY), a, b, c, d);
+        }
+    }
 
     int iix, iiy;
     int pos;
