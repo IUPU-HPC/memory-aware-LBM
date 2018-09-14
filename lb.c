@@ -993,7 +993,7 @@ void collide_tight_openmp(Simulation* sim) {
 void collide_tight_block(Simulation* sim) {
     unsigned int iX, iY, iPop;
     // unsigned int blk_size = 32;
-    int iix, iiy;
+    unsigned int iix, iiy;
     int lx=sim->lx, ly=sim->ly;
     double ux1, uy1, ux2, uy2;
     int nextX, nextY;
@@ -1004,19 +1004,23 @@ void collide_tight_block(Simulation* sim) {
         retval = PAPI_start_counters(EventSet, NUM_EVENTS);
 #endif
 
-    int pos, new_pos, next, new_next;
+    unsigned int pos, new_pos, next, new_next, tmp;
+    Node *buf1, *buf2;
+    buf1 = sim->memoryChunk;
+    buf2 = sim->tmpMemoryChunk;
     for (iX=1; iX<=sim->lx; iX+=blk_size) {
         for (iY=1; iY<=sim->ly; iY+=blk_size) {
+            pos = (iY-1)*blk_size + (iX-1)*ly;
             for(iix = 0; iix < blk_size; iix++){
                 for(iiy = 0; iiy < blk_size; iiy++){
 
                     // step1: collision on this line y
                     /*collideNode(&(sim->lattice[iX+iix][iY+iiy]));*/
-                    pos = iiy + iix * blk_size + (iY-1)*blk_size + (iX-1)*ly;
+                    /*pos = iiy + iix * blk_size + (iY-1)*blk_size + (iX-1)*ly;*/
                     /*pos = CALC_POS(iX+iix, iY+iiy);*/
-                    collideNode(sim->memoryChunk+pos);
+                    collideNode(buf1+pos);
                     /*new_pos = pos + iiy + iix*blk_size;*/
-                    /*collideNode(sim->memoryChunk + new_pos);*/
+                    /*collideNode(buf1 + new_pos);*/
 
                     // step 2: stream from line x-1 to x
                     for (iPop=0; iPop<9; ++iPop) {
@@ -1026,9 +1030,9 @@ void collide_tight_block(Simulation* sim) {
 /*                        sim->tmpLattice[nextX][nextY].fPop[iPop] =*/
                             /*sim->lattice[iX+iix][iY+iiy].fPop[iPop];*/
                         next =  map(sim, nextX, nextY); 
-                         (*(sim->tmpMemoryChunk+next)).fPop[iPop] =
-                            (*(sim->memoryChunk+pos)).fPop[iPop];
-                            /*(*(sim->memoryChunk+new_pos)).fPop[iPop];*/
+                         (*(buf2+next)).fPop[iPop] =
+                            (*(buf1+pos)).fPop[iPop];
+                            /*(*(buf1+new_pos)).fPop[iPop];*/
                     }
 
                     if(iX+iix>1 && iY+iiy>1){
@@ -1038,13 +1042,13 @@ void collide_tight_block(Simulation* sim) {
 
                             //store rho from column iX=lx-2, iY=2~ly-1 need to be computed; iY=1, ly also computed but not used
                             /*computeMacros(sim->tmpLattice[iX+iix-1][iY+iiy-1].fPop, &myrho2[iY+iiy-1], &ux2, &uy2);*/
-                            pos = CALC_POS(iX+iix-1, iY+iiy-1);
-                            computeMacros((*(sim->tmpMemoryChunk+pos)).fPop, &myrho2[iY+iiy-1], &ux2, &uy2);
+                            tmp = CALC_POS(iX+iix-1, iY+iiy-1);
+                            computeMacros((*(buf2+tmp)).fPop, &myrho2[iY+iiy-1], &ux2, &uy2);
                         }
                         if( (iX+iix)==lx ){
                             /*computeMacros(sim->tmpLattice[iX+iix-1][iY+iiy-1].fPop, &myrho1[iY+iiy-1], &ux1, &uy1);*/
-                            pos = CALC_POS(iX+iix-1, iY+iiy-1);
-                            computeMacros((*(sim->tmpMemoryChunk+pos)).fPop, &myrho1[iY+iiy-1], &ux1, &uy1);
+                            tmp = CALC_POS(iX+iix-1, iY+iiy-1);
+                            computeMacros((*(buf2+tmp)).fPop, &myrho1[iY+iiy-1], &ux1, &uy1);
                         }
 #endif
                         // step 3: second collision on line x-1, y-1
@@ -1053,10 +1057,11 @@ void collide_tight_block(Simulation* sim) {
 
                         /*collideNode(&(sim->tmpLattice[iX+iix-1][iY+iiy-1]));*/
                         /*pos = iiy-1 + (iix-1) * blk_size + (iY-1)*blk_size + (iX-1)*ly;*/
-                        pos = CALC_POS(iX+iix-1, iY+iiy-1);
-                        collideNode(sim->tmpMemoryChunk+pos);
+                        new_pos = CALC_POS(iX+iix-1, iY+iiy-1);
+                        /*new_pos = pos - blk_size -1;*/ //wrong
+                        collideNode(buf2+new_pos);
                         /*new_next = next + iiy + iix*blk_size;*/
-                        /*collideNode(sim->tmpMemoryChunk+new_next);*/
+                        /*collideNode(buf2+new_next);*/
 
                         // another branch for iX=sim->lx-1 and iY=sim-lx-2
 
@@ -1067,22 +1072,23 @@ void collide_tight_block(Simulation* sim) {
 /*                           sim->lattice[nextX][nextY].fPop[iPop] =*/
                                 /*sim->tmpLattice[iX+iix-1][iY+iiy-1].fPop[iPop];*/
                             next =  map(sim, nextX, nextY); 
-                            (*(sim->memoryChunk+next)).fPop[iPop] =
-                                (*(sim->tmpMemoryChunk+pos)).fPop[iPop];
-                                /*(*(sim->tmpMemoryChunk+new_next)).fPop[iPop];*/
+                            (*(buf1+next)).fPop[iPop] =
+                                (*(buf2+new_pos)).fPop[iPop];
+                                /*(*(buf2+new_next)).fPop[iPop];*/
                        }
                     }
+                    pos++;
                 }
             }
         }// end of iY loop
     }// end of iX loop
 
-    //Line iX=1~lx-1, y=ly need to compute one more time
+    // up boundary: iX=1~lx-1, y=ly need to compute one more time (except right up corner)
     // iY=sim->ly;
     for(iX=1; iX<sim->lx; ++iX){
         /*collideNode(&(sim->tmpLattice[iX][ly]));*/
         pos =  CALC_POS(iX, ly);
-        collideNode(sim->tmpMemoryChunk+pos);
+        collideNode(buf2+pos);
 
         for (iPop=0; iPop<9; ++iPop) {
             nextX = iX + c[iPop][0];
@@ -1090,28 +1096,31 @@ void collide_tight_block(Simulation* sim) {
             /*sim->lattice[nextX][nextY].fPop[iPop] =*/
                 /*sim->tmpLattice[iX][ly].fPop[iPop];*/
             next =  map(sim, nextX, nextY); 
-            (*(sim->memoryChunk+next)).fPop[iPop] =
-                (*(sim->tmpMemoryChunk+pos)).fPop[iPop];
+            (*(buf1+next)).fPop[iPop] =
+                (*(buf2+pos)).fPop[iPop];
        }
     }
 
-    //Line iY=1~ly, iX=lx need to compute one more time
+    // right boundary: iY=1~ly, iX=lx need to compute one more time
     // iX=sim->lx;
-    //simple optimize
+    
+    // step1: compute right bottom corner point
     iY=1;
     /*collideNode(&(sim->tmpLattice[lx][iY]));*/
+    /*pos = CALC_POS(lx, iY);*/
     pos = CALC_POS(lx, iY);
-    collideNode(sim->tmpMemoryChunk+pos);
+    collideNode(buf2+pos);
     for (iPop=0; iPop<9; ++iPop) {
         nextX = lx + c[iPop][0];
         nextY = iY + c[iPop][1];
         /*sim->lattice[nextX][nextY].fPop[iPop] =*/
             /*sim->tmpLattice[lx][iY].fPop[iPop];*/
         next = map(sim, nextX, nextY);
-        (*(sim->memoryChunk+next)).fPop[iPop] =
-            (*(sim->tmpMemoryChunk+pos)).fPop[iPop];
+        (*(buf1+next)).fPop[iPop] =
+            (*(buf2+pos)).fPop[iPop];
    }
 
+    // step2: compute iY=2~ly-1
     for (iY=2; iY<sim->ly; ++iY){
 
 #ifdef ZGB
@@ -1121,7 +1130,7 @@ void collide_tight_block(Simulation* sim) {
 #endif
         /*collideNode(&(sim->tmpLattice[lx][iY]));*/
         pos =  CALC_POS(lx, iY);
-        collideNode(sim->tmpMemoryChunk+pos);
+        collideNode(buf2+pos);
 
         for (iPop=0; iPop<9; ++iPop) {
             nextX = lx + c[iPop][0];
@@ -1129,15 +1138,15 @@ void collide_tight_block(Simulation* sim) {
             /*sim->lattice[nextX][nextY].fPop[iPop] =*/
                 /*sim->tmpLattice[lx][iY].fPop[iPop];*/
             next = map(sim, nextX, nextY);
-            (*(sim->memoryChunk+next)).fPop[iPop] =
-                (*(sim->tmpMemoryChunk+pos)).fPop[iPop];
+            (*(buf1+next)).fPop[iPop] =
+                (*(buf2+pos)).fPop[iPop];
        }
     }
 
-    //compute lx, ly point
+    // step3: compute lx, ly point (right up corner)
     /*collideNode(&(sim->tmpLattice[lx][ly]));*/
     pos = CALC_POS(lx, ly);
-    collideNode(sim->tmpMemoryChunk+pos);
+    collideNode(buf2+pos);
 
     for (iPop=0; iPop<9; ++iPop) {
         nextX = lx + c[iPop][0];
@@ -1145,8 +1154,8 @@ void collide_tight_block(Simulation* sim) {
         /*sim->lattice[nextX][nextY].fPop[iPop] =*/
             /*sim->tmpLattice[lx][ly].fPop[iPop];*/
         next = map(sim, nextX, nextY);
-        (*(sim->memoryChunk+next)).fPop[iPop] =
-            (*(sim->tmpMemoryChunk+pos)).fPop[iPop];
+        (*(buf1+next)).fPop[iPop] =
+            (*(buf2+pos)).fPop[iPop];
    }
 
 #ifdef ADDPAPI

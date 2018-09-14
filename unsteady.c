@@ -36,8 +36,8 @@
 #include "eval_tools.h"
 #include <math.h>
 
-#define NO_SAVE
-/*#define DEBUG*/
+/*#define NO_SAVE*/
+#define DEBUG
 
   // These constants define the flow geometry and are commented in
   //   the function setConstants()
@@ -273,6 +273,7 @@ void test_map(Simulation* sim){
 
     int iX, iY;
     int lx=sim->lx, ly=sim->ly;
+#ifdef USE_SHIFT    
     for(iX=0; iX<=lx+1; ++iX) {
         for(iY=0; iY<=ly+1; ++iY) {
 /*#define CALC_POS(X,Y) (Y-1)%blk_size + (int)((int)((X-1)%blk_size) << move) + (int)(((int)((Y-1) >> move)) << (move+move)) + (int)(((int)((X-1) >> move)) << (move+move_y))*/
@@ -284,21 +285,28 @@ void test_map(Simulation* sim){
             printf("[%d][%d]->%d, a=%d, b=%d, c=%d, d=%d\n", iX, iY, map(sim, iX, iY), a, b, c, d);
         }
     }
+#endif    
 
     int iix, iiy;
-    int pos;
-    for (iX=1; iX<=sim->lx; iX+=blk_size) 
-        for (iY=1; iY<=sim->ly; iY+=blk_size) 
-            for(iix = 0; iix < blk_size; iix++)
+    int pos, new_pos;
+    for (iX=1; iX<=sim->lx; iX+=blk_size) { 
+        for (iY=1; iY<=sim->ly; iY+=blk_size) { 
+            pos = (iY-1)*blk_size + (iX-1)*ly;
+            for(iix = 0; iix < blk_size; iix++) {
                 for(iiy = 0; iiy < blk_size; iiy++) {
-                    pos = iiy + iix * blk_size + (iY-1)*blk_size + (iX-1)*ly;
+                    /*pos = iiy + iix * blk_size + (iY-1)*blk_size + (iX-1)*ly;*/
                     printf("[%d][%d]->%d\n", iix+iX, iiy+iY, pos);
                     
                     if(iX+iix>1 && iY+iiy>1){
-                        pos = iiy-1 + (iix-1) * blk_size + (iY-1)*blk_size + (iX-1)*ly;
-                        printf("[%d][%d]->%d\n", iix+iX-1, iiy+iY-1, pos);
+                        /*pos = iiy-1 + (iix-1) * blk_size + (iY-1)*blk_size + (iX-1)*ly;*/
+                        new_pos = CALC_POS(iX+iix-1, iY+iiy-1);
+                        printf("new_pos: [%d][%d]->%d\n", iix+iX-1, iiy+iY-1, new_pos);
                     }
+                    pos++;
                 }
+            }
+        }
+    }   
 }
 #endif
 

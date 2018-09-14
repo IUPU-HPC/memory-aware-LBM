@@ -96,9 +96,9 @@ typedef struct {
 
 /* added by Yuankun Fu                                */
 /*****************************************************************/
-//#define CALC_POS(X,Y) (Y-1)%blk_size + ((X-1)%blk_size)*blk_size + ((Y-1)/blk_size)*blk_size*blk_size + ((X-1)/blk_size)*blk_size*ly
+#define CALC_POS(X,Y) (Y-1)%blk_size + ((X-1)%blk_size)*blk_size + ((Y-1)/blk_size)*blk_size*blk_size + ((X-1)/blk_size)*blk_size*ly
 //#define CALC_POS(X,Y) (Y-1)%blk_size + ((X-1)%blk_size)*blk_size + (Y-1)*blk_size + (X-1)*ly
-#define CALC_POS(X,Y) (Y-1)%blk_size + (int)((int)((X-1)%blk_size) << move) + (int)(((int)((Y-1) >> move)) << (move+move)) + (int)((((int)((X-1) >> move)) << move )* ly)
+//#define CALC_POS(X,Y) (Y-1)%blk_size + (int)((int)((X-1)%blk_size) << move) + (int)(((int)((Y-1) >> move)) << (move+move)) + (int)((((int)((X-1) >> move)) << move )* ly)
 void updateZeroGradientBoundary();
 
 void collide_with_stream(Simulation* sim);
