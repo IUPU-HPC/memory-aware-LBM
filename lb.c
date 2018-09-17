@@ -105,7 +105,7 @@ int map(Simulation* sim, int ix, int iy){
         return pos;
     }    
     //right ghost cell
-    else if(ix == (ly+1) ){ 
+    else if(ix == (lx+1) ){ 
         pos = lx*ly+ly+2+iy; 
         /*printf("right: [%d:%d]->%d, iX=%d, iY=%d\n", ix, iy, pos, iX, iY);*/
 
@@ -139,7 +139,7 @@ int map(Simulation* sim, int ix, int iy){
         /*return pos;*/
     /*}*/
     else{
-        fprintf(stderr, "no mapping is detected\n");
+        fprintf(stderr, "[%d:%d] no mapping is detected\n", ix, iy);
         fflush(stderr);
         abort();
     }    

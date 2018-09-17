@@ -36,8 +36,8 @@
 #include "eval_tools.h"
 #include <math.h>
 
-/*#define NO_SAVE*/
-#define DEBUG
+#define NO_SAVE
+/*#define DEBUG*/
 
   // These constants define the flow geometry and are commented in
   //   the function setConstants()
@@ -617,7 +617,7 @@ int main(int argc, char *argv[]) {
     printf("AE: ");
     for(i=0; i<NUM_EVENTS; i++){
     //Avg_Event[%d]
-    printf("%lld ", global_CM[i]/thread_count);
+    printf("%e ", (double) (global_CM[i]/thread_count));
     }
     printf("\n");
     fflush(stdout);
