@@ -34,7 +34,7 @@
 #include <stdlib.h>
 #include "eval_tools.h"
 
-#define NO_SAVE
+#define NO_SAVE // output velocity x,y,z to file to generate Paraview vedio 
 
   // These constants define the flow geometry and are commented in
   //   the function setConstants()
@@ -44,18 +44,14 @@ double uMax, Re, nu, omega;
 int maxT, tSave;
 int NUM_THREADS;
 
-/********************* added by Yuankun Fu ***********************/
+/********************* blocking parameters ***********************/
 int blk_size;
 double *myrho1, *myrho2;
 int iT=0, count;
 int thread_block;
-// #define TIGHT2
+// #define TIGHT2 // This alg complete all nodes' first c&s on line y, then second collide&stream on line y-1. This one is worse than default using immediately compute second c&s.
 
-/*#ifdef ADDPAPI*/
-  // int EventSet[] = {PAPI_TLB_DM, PAPI_L1_DCM, PAPI_L2_DCM, PAPI_L3_DCM};
-  long long global_CM[NUM_EVENTS];
-  // int EventSet[] = {PAPI_L1_DCM, PAPI_L2_DCM, PAPI_TLB_DM};
-/*#endif*/
+long long global_CM[NUM_EVENTS];
 /********************* ******************** ***********************/
 
   // The dynamics that are to be specified on different regions of
@@ -92,9 +88,9 @@ void setConstants(int argc, char *argv[]) {
     obst_x = lx/5;
     obst_y = ly/2;*/
 
-    lx = atoi(argv[1]);     //channel lenghth
-    ly = atoi(argv[2]);     //channel width
-    blk_size = atoi(argv[3]);
+    lx = atoi(argv[1]);      // channel lenghth
+    ly = atoi(argv[2]);      // channel width
+    blk_size = atoi(argv[3]); // blocking size
 
     /*obst_r = 8;   // radius of the cylinder*/
     obst_r = ly/10+1;   // radius of the cylinder
@@ -124,8 +120,7 @@ void iniData() {
     leftBoundary  = (Dynamics*) calloc(ly+2, sizeof(Dynamics));
     rightBoundary = (Dynamics*) calloc(ly+2, sizeof(Dynamics));
 
-#ifdef ZGB
-    //add by Yuankun
+#ifdef ZGB // handle zero-gradient boundary condition
     myrho1 = (double *) calloc(ly, sizeof(double));
     myrho2 = (double *) calloc(ly, sizeof(double));
 #endif
@@ -152,8 +147,6 @@ void freeData() {
     free(leftBoundary);
     free(poiseuilleBoundary);
     free(pressureBoundary);
-
-    //add by Yuankun
     free(myrho1);
     free(myrho2);
 }
@@ -181,10 +174,6 @@ void iniGeometry() {
             {
                 setDynamics(&sim, iX, iY, &bounceBackDynamics);
             }
-            //   //add by Yuankun
-            // else if ( (iY==1) || (iY==ly) ){
-            //     setDynamics(&sim, iX, iY, &bounceBackDynamics);
-            // }
               // elsewhere, use lbgk dynamics
             else {
                 setDynamics(&sim, iX, iY, &bulkDynamics);
@@ -221,11 +210,6 @@ void updateZeroGradientBoundary() {
         computeMacros(sim.lattice[lx-2][iY].fPop, &rho2, &ux2, &uy2);
         pressureBoundary[iY].rho = 4./3.*rho1 - 1./3.*rho2;
         pressureBoundary[iY].uPar = 0.; //uy=0
-
-        // if(iT==1 || iT==2){
-        //     printf("in ZGB, iT=%d, rho2[%d]=%f, rho1[%d]=%f\n", iT, iY, rho2, iY, rho1);
-        //     fflush(stdout);
-        // }
     }
 }
 

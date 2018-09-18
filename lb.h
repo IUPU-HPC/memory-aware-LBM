@@ -86,46 +86,49 @@ void iniEquilibrium(Node* node, double rho, double ux, double uy);
  */
 typedef struct {
     int lx, ly;               // lx*ly lattice
-    Node*  memoryChunk;       // contiguous raw memory
-    Node*  tmpMemoryChunk;    // contiguous raw tmp memory
+    Node*  memoryChunk;       // contiguous raw memory for buf1
+    Node*  tmpMemoryChunk;    // contiguous raw tmp memory for buf2
     Node** lattice;           // lattice, points to raw memory
-    Node** tmpLattice;        // tmp lasttice, points to raw memory
+    Node** tmpLattice;        // tmp lattice, points to raw memory
 } Simulation;
 
-/* added by lifeng & Yuankun Fu                                */
+/* different algorithm for collide&streaming                     */
 /*****************************************************************/
 void updateZeroGradientBoundary();
 
-void collide_with_stream(Simulation* sim);
-void collide_with_stream_openmp(Simulation* sim);
-void collide_with_stream_twice(Simulation* sim);
-void finalize_stream(Simulation* sim);
-
-void collide_tight(Simulation* sim);
-void collide_tight2(Simulation* sim);
-void collide_tight_openmp(Simulation* sim);
-
-void collide_tight_block(Simulation* sim);
-void collide_tight_block_openmp(Simulation* sim);
-
-void collide_tight_panel_ix(Simulation* sim);
-void collide_tight_panel_iy(Simulation* sim);
-void collide_tight_panel_iy_openmp(Simulation* sim);
-void finalize_tight(Simulation* sim);
-
-void constructSim(Simulation* sim, int lx, int ly);
-void destructSim(Simulation* sim);
-void setDynamics(Simulation* sim, int iX, int iY, Dynamics* dyn);
-
+/* Original LBM*/
 void collide(Simulation* sim);
 void collide_openmp(Simulation* sim);
 void propagate(Simulation* sim);
 void propagate_openmp(Simulation* sim);
+void finalize_stream(Simulation* sim);
+
+/* Fused LBM*/
+void collide_with_stream(Simulation* sim);
+void collide_with_stream_openmp(Simulation* sim);
+
+/* Two-steps Line LBM*/
+void collide_tight(Simulation* sim);
+void collide_tight2(Simulation* sim);
+void collide_tight_openmp(Simulation* sim);
+
+/* Two-steps Blocking LBM*/
+void collide_tight_block(Simulation* sim);
+void collide_tight_block_openmp(Simulation* sim);
+
+/* Two-steps Panel LBM*/
+void collide_tight_panel_ix(Simulation* sim);
+void collide_tight_panel_iy(Simulation* sim);
+void collide_tight_panel_iy_openmp(Simulation* sim);
+
+/* Initialize sturcture sim*/
+void constructSim(Simulation* sim, int lx, int ly);
+void destructSim(Simulation* sim);
+void setDynamics(Simulation* sim, int iX, int iY, Dynamics* dyn);
 
 void makePeriodic(Simulation* sim);
 void saveVel(Simulation* sim, char fName[]);
 void saveF(Simulation* sim, int iPop, char fName[]);
-
 
 /* some free helper functions                                    */
 /*****************************************************************/

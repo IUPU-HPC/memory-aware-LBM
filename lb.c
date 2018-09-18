@@ -25,7 +25,7 @@
 #include "lb.h"
 #include "assert.h"
 
-/*------------------------add by Yuankun------------------------*/
+/*------------------------Two-steps alg modifcation------------------------*/
 #include "boundaries.h"
 extern PressureBCData* pressureBoundary;
 extern int blk_size;
@@ -35,10 +35,7 @@ extern int thread_block;
 extern int NUM_THREADS;
 
 
-/*#ifdef ADDPAPI*/
-// extern int EventSet[];
 extern long long global_CM[NUM_EVENTS];
-/*#endif*/
 /********************* ******************** ***********************/
 
 
@@ -130,6 +127,47 @@ inline static void collideNode(Node* node) {
                                 node->dynamics->selfData);
 }
 
+/* some free helper functions                                    */
+/*****************************************************************/
+
+  // compute density and velocity from the f's
+void computeMacros(double* f, double* rho, double* ux, double* uy) {
+    double upperLine  = f[2] + f[5] + f[6];
+    double mediumLine = f[0] + f[1] + f[3];
+    double lowerLine  = f[4] + f[7] + f[8];
+    *rho = upperLine + mediumLine + lowerLine;
+    *ux  = (f[1] + f[5] + f[8] - (f[3] + f[6] + f[7]))/(*rho);
+    *uy  = (upperLine - lowerLine)/(*rho);
+}
+
+  // compute local equilibrium from rho and u
+double computeEquilibrium(int iPop, double rho,
+                          double ux, double uy, double uSqr)
+{
+    double c_u = c[iPop][0]*ux + c[iPop][1]*uy;
+    return rho * t[iPop] * (
+               1. + 3.*c_u + 4.5*c_u*c_u - 1.5*uSqr
+           );
+}
+
+  // bgk collision term
+void bgk(double* fPop, void* selfData) {
+    double omega = *((double*)selfData);
+    double rho, ux, uy;
+    computeMacros(fPop, &rho, &ux, &uy);
+    double uSqr = ux*ux+uy*uy;
+    int iPop;
+
+    for(iPop=0; iPop<9; ++iPop) {
+        fPop[iPop] *= (1-omega);
+        fPop[iPop] += omega * computeEquilibrium (
+                                  iPop, rho, ux, uy, uSqr );
+    }
+}
+
+
+/*-------------- Original LBM -----------------------------------*/
+/*****************************************************************/
   // apply collision step to all lattice nodes
 void collide(Simulation* sim) {
     int iX, iY, iPop;
@@ -204,131 +242,12 @@ void collide_openmp(Simulation* sim) {
 
 }
 
-void collide_with_stream(Simulation* sim) {
-    int iX, iY, iPop;
-    int nextX, nextY;
-
-#ifdef ADDPAPI
-        long long value_CM[NUM_EVENTS];
-        int retval;
-        retval = PAPI_start_counters(EventSet, NUM_EVENTS);
-#endif
-
-    for (iX=1; iX<=sim->lx; ++iX) {
-        for (iY=1; iY<=sim->ly; ++iY) {
-
-            collideNode(&(sim->lattice[iX][iY]));
-            // streamming imediately once we got the updated f
-            for (iPop=0; iPop<9; ++iPop) {
-                nextX = iX + c[iPop][0];
-                nextY = iY + c[iPop][1];
-                sim->tmpLattice[nextX][nextY].fPop[iPop] =
-                    sim->lattice[iX][iY].fPop[iPop];
-            }
-        }
-    }
-
-#ifdef ADDPAPI
-        retval=PAPI_stop_counters(value_CM, NUM_EVENTS);
-
-        int my_rank = 0;
-        int thread_count = 1;
-
-        int i;
-        for(i=0; i<NUM_EVENTS; i++){
-            // printf("T%d: event[%d]=%lld\n", my_rank, i, value_CM[i]);
-            // fflush(stdout);
-            global_CM[i] += value_CM[i];
-        }
-#endif
-}
-
-void collide_with_stream_openmp(Simulation* sim) {
-    int iX, iY, iPop;
-    int nextX, nextY;
-
-#ifdef _OPENMP
-#pragma omp parallel default(shared) reduction(+: global_CM)
-{
-    #ifdef ADDPAPI
-        long long value_CM[NUM_EVENTS];
-        int retval;
-        retval = PAPI_start_counters(EventSet, NUM_EVENTS);
-    #endif
-
-    #pragma omp for private(iX, iY, iPop, nextX, nextY) schedule(static, thread_block)
-    for (iX=1; iX<=sim->lx; ++iX) {
-        for (iY=1; iY<=sim->ly; ++iY) {
-            collideNode(&(sim->lattice[iX][iY]));
-            // streamming imediately once we got the updated f
-            for (iPop=0; iPop<9; ++iPop) {
-                nextX = iX + c[iPop][0];
-                nextY = iY + c[iPop][1];
-                sim->tmpLattice[nextX][nextY].fPop[iPop] =
-                    sim->lattice[iX][iY].fPop[iPop];
-            }
-        }
-    }
-
-    #ifdef ADDPAPI
-        retval=PAPI_stop_counters(value_CM, NUM_EVENTS);
-
-        int my_rank = omp_get_thread_num();
-        int thread_count = omp_get_num_threads();
-
-        int i;
-        for(i=0; i<NUM_EVENTS; i++){
-            // printf("T%d: event[%d]=%lld\n", my_rank, i, value_CM[i]);
-            // fflush(stdout);
-            global_CM[i] += value_CM[i];
-        }
-    #endif
-}
-#else
-    printf("No OPENMP used");
-#endif
-
-}
-
-void collide_with_stream_twice(Simulation* sim) {
-    int iX, iY, iPop;
-    for (iX=1; iX<=sim->lx; ++iX) {
-        for (iY=1; iY<=sim->ly; ++iY) {
-
-            collideNode(&(sim->lattice[iX][iY]));
-        // streamming imediately once we got the updated velocities in this point
-            for (iPop=0; iPop<9; ++iPop) {
-                int nextX = iX + c[iPop][0];
-                int nextY = iY + c[iPop][1];
-                sim->tmpLattice[nextX][nextY].fPop[iPop] =
-                    sim->lattice[iX][iY].fPop[iPop];
-            }
-
-            collideNode(&(sim->tmpLattice[iX][iY]));
-        // streamming imediately once we got the updated velocity in this point
-            for (iPop=0; iPop<9; ++iPop) {
-                int nextX = iX + c[iPop][0];
-                int nextY = iY + c[iPop][1];
-                /*
-                sim->tmpLattice2[nextX][nextY].fPop[iPop] =
-                    sim->tmpLattice[iX][iY].fPop[iPop];
-                    */
-
-                sim->lattice[nextX][nextY].fPop[iPop] =
-                    sim->tmpLattice[iX][iY].fPop[iPop];
-            }
-
-        }
-    }
-}
-
   // apply propagation step with help of temporary memory
 void propagate(Simulation* sim) {
     int iX, iY, iPop;
     int lx = sim->lx;
     int ly = sim->ly;
     int nextX, nextY;
-    
 
 #ifdef ADDPAPI
         long long value_CM[NUM_EVENTS];
@@ -428,6 +347,97 @@ void finalize_stream(Simulation* sim){
     sim->tmpLattice = swapLattice;
 }
 
+
+/*----------------- Fused LBM -----------------------------------*/
+/*****************************************************************/
+void collide_with_stream(Simulation* sim) {
+    int iX, iY, iPop;
+    int nextX, nextY;
+
+#ifdef ADDPAPI
+        long long value_CM[NUM_EVENTS];
+        int retval;
+        retval = PAPI_start_counters(EventSet, NUM_EVENTS);
+#endif
+
+    for (iX=1; iX<=sim->lx; ++iX) {
+        for (iY=1; iY<=sim->ly; ++iY) {
+
+            collideNode(&(sim->lattice[iX][iY]));
+            // streamming imediately once we got the updated f
+            for (iPop=0; iPop<9; ++iPop) {
+                nextX = iX + c[iPop][0];
+                nextY = iY + c[iPop][1];
+                sim->tmpLattice[nextX][nextY].fPop[iPop] =
+                    sim->lattice[iX][iY].fPop[iPop];
+            }
+        }
+    }
+
+#ifdef ADDPAPI
+        retval=PAPI_stop_counters(value_CM, NUM_EVENTS);
+
+        int my_rank = 0;
+        int thread_count = 1;
+
+        int i;
+        for(i=0; i<NUM_EVENTS; i++){
+            // printf("T%d: event[%d]=%lld\n", my_rank, i, value_CM[i]);
+            // fflush(stdout);
+            global_CM[i] += value_CM[i];
+        }
+#endif
+}
+
+void collide_with_stream_openmp(Simulation* sim) {
+    int iX, iY, iPop;
+    int nextX, nextY;
+
+#ifdef _OPENMP
+#pragma omp parallel default(shared) reduction(+: global_CM)
+{
+    #ifdef ADDPAPI
+        long long value_CM[NUM_EVENTS];
+        int retval;
+        retval = PAPI_start_counters(EventSet, NUM_EVENTS);
+    #endif
+
+    #pragma omp for private(iX, iY, iPop, nextX, nextY) schedule(static, thread_block)
+    for (iX=1; iX<=sim->lx; ++iX) {
+        for (iY=1; iY<=sim->ly; ++iY) {
+            collideNode(&(sim->lattice[iX][iY]));
+            // streamming imediately once we got the updated f
+            for (iPop=0; iPop<9; ++iPop) {
+                nextX = iX + c[iPop][0];
+                nextY = iY + c[iPop][1];
+                sim->tmpLattice[nextX][nextY].fPop[iPop] =
+                    sim->lattice[iX][iY].fPop[iPop];
+            }
+        }
+    }
+
+    #ifdef ADDPAPI
+        retval=PAPI_stop_counters(value_CM, NUM_EVENTS);
+
+        int my_rank = omp_get_thread_num();
+        int thread_count = omp_get_num_threads();
+
+        int i;
+        for(i=0; i<NUM_EVENTS; i++){
+            // printf("T%d: event[%d]=%lld\n", my_rank, i, value_CM[i]);
+            // fflush(stdout);
+            global_CM[i] += value_CM[i];
+        }
+    #endif
+}
+#else
+    printf("No OPENMP used");
+#endif
+
+}
+
+/*-------- Two Steps Line LBM -----------------------------------*/
+/*****************************************************************/
 // immediately compute iX-1, iY-1
 void collide_tight(Simulation* sim) {
     int iX, iY, index, iPop;
@@ -561,6 +571,8 @@ void collide_tight(Simulation* sim) {
 
 }// end of func
 
+/*----------Two Steps Line LBM (worse performance) --------------*/
+/*****************************************************************/
 //go through whole line, then compute lower line
 void collide_tight2(Simulation* sim) {
     int iX, iY, index, iPop;
@@ -919,6 +931,8 @@ void collide_tight_openmp(Simulation* sim) {
 }// end of func
 
 
+/*----------- Two Steps Blocking LBM ----------------------------*/
+/*****************************************************************/
 void collide_tight_block(Simulation* sim) {
     unsigned int iX, iY, iPop;
     // unsigned int blk_size = 32;
@@ -1274,7 +1288,9 @@ void collide_tight_block_openmp(Simulation* sim) {
 
 }
 
-//on ix
+/*----------- Two steps Panel LBM -------------------------------*/
+/*****************************************************************/
+// Traversing on x axis
 void collide_tight_panel_ix(Simulation* sim) {
     unsigned int iX, iY, iPop;
     // unsigned int blk_size = 32;
@@ -1382,7 +1398,7 @@ void collide_tight_panel_ix(Simulation* sim) {
     }
 }
 
-//on iy
+// Traversing on y axis
 void collide_tight_panel_iy(Simulation* sim) {
     unsigned int iX, iY, iPop;
     // unsigned int blk_size = 32;
@@ -1800,6 +1816,8 @@ void makePeriodic(Simulation* sim) {
     lat[1][ly].fPop[8]  = lat[lx+1][0].fPop[8];
 }
 
+/*---- Output for generating Paraview video ---------------------*/
+/*****************************************************************/
   // save the velocity field (norm) to disk
 void saveVel(Simulation* sim, char fName[]) {
     FILE* oFile = fopen(fName, "w");
@@ -1808,14 +1826,16 @@ void saveVel(Simulation* sim, char fName[]) {
     double tmp=1.0;
 
     // compute norm to verify results & generate figure for MATLAB
-/*     for (iY=1; iY<=sim->ly; ++iY) {*/
-        /*for (iX=1; iX<=sim->lx; ++iX) {*/
-            /*computeMacros(sim->lattice[iX][iY].fPop, &rho, &ux, &uy);*/
-            /*uNorm = sqrt(ux*ux+uy*uy);*/
-            /*fprintf(oFile, "%f ", uNorm);*/
-        /*}*/
-        /*fprintf(oFile, "\n");*/
-     /*}*/
+#ifdef OUTPUT_MATLAB
+     for (iY=1; iY<=sim->ly; ++iY) {
+        for (iX=1; iX<=sim->lx; ++iX) {
+            computeMacros(sim->lattice[iX][iY].fPop, &rho, &ux, &uy);
+            uNorm = sqrt(ux*ux+uy*uy);
+            fprintf(oFile, "%f ", uNorm);
+        }
+        fprintf(oFile, "\n");
+     }
+#endif
 
     // save vx, vy for paraview+catalyst
     for (iY=1; iY<=sim->ly; ++iY) {
@@ -1844,43 +1864,3 @@ void saveF(Simulation* sim, int iPop, char fName[]) {
 
     fclose(oFile);
 }
-
-
-/* some free helper functions                                    */
-/*****************************************************************/
-
-  // compute density and velocity from the f's
-void computeMacros(double* f, double* rho, double* ux, double* uy) {
-    double upperLine  = f[2] + f[5] + f[6];
-    double mediumLine = f[0] + f[1] + f[3];
-    double lowerLine  = f[4] + f[7] + f[8];
-    *rho = upperLine + mediumLine + lowerLine;
-    *ux  = (f[1] + f[5] + f[8] - (f[3] + f[6] + f[7]))/(*rho);
-    *uy  = (upperLine - lowerLine)/(*rho);
-}
-
-  // compute local equilibrium from rho and u
-double computeEquilibrium(int iPop, double rho,
-                          double ux, double uy, double uSqr)
-{
-    double c_u = c[iPop][0]*ux + c[iPop][1]*uy;
-    return rho * t[iPop] * (
-               1. + 3.*c_u + 4.5*c_u*c_u - 1.5*uSqr
-           );
-}
-
-  // bgk collision term
-void bgk(double* fPop, void* selfData) {
-    double omega = *((double*)selfData);
-    double rho, ux, uy;
-    computeMacros(fPop, &rho, &ux, &uy);
-    double uSqr = ux*ux+uy*uy;
-    int iPop;
-
-    for(iPop=0; iPop<9; ++iPop) {
-        fPop[iPop] *= (1-omega);
-        fPop[iPop] += omega * computeEquilibrium (
-                                  iPop, rho, ux, uy, uSqr );
-    }
-}
-
