@@ -1,8 +1,7 @@
 /*  Lattice Boltzmann sample, written in C
  *
- *  Copyright (C) 2006 Jonas Latt
- *  Address: Rue General Dufour 24,  1211 Geneva 4, Switzerland
- *  E-mail: Jonas.Latt@cui.unige.ch
+ *  Copyright (C) 2018 Yuankun Fu
+ *  E-mail: fu121@purdue.edu
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License

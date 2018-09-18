@@ -1,8 +1,7 @@
 /*  Lattice Boltzmann sample, written in C
  *
- *  Copyright (C) 2006 Jonas Latt
- *  Address: Rue General Dufour 24,  1211 Geneva 4, Switzerland
- *  E-mail: Jonas.Latt@cui.unige.ch
+ *  Copyright (C) 2018 Yuankun Fu
+ *  E-mail: fu121@purdue.edu
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -175,11 +174,7 @@ void iniGeometry() {
               // density and a velocity determined by a y-dependend Poiseuille
               // profile.
             double uPoiseuille = computePoiseuille(iY);
-#if defined (TIGHT_BLOCK)
-            iniEquilibrium(sim.memoryChunk+sim.map_matrix[iX][iY], 1., uPoiseuille, 0.);
-#else            
             iniEquilibrium(&sim.lattice[iX][iY], 1., uPoiseuille, 0.);
-#endif            
               // on the obstacle, set bounce back dynamics
             if ( (iX-obst_x)*(iX-obst_x) +
                  (iY-obst_y)*(iY-obst_y) <= obst_r*obst_r )
@@ -222,13 +217,8 @@ void updateZeroGradientBoundary() {
     int iY;
     double rho1, ux1, uy1, rho2, ux2, uy2;
     for (iY=2; iY<=ly-1; ++iY) {
-#if defined (TIGHT_BLOCK)
-        computeMacros((*(sim.memoryChunk+sim.map_matrix[lx-1][iY])).fPop, &rho1, &ux1, &uy1);
-        computeMacros((*(sim.memoryChunk+sim.map_matrix[lx-2][iY])).fPop, &rho2, &ux2, &uy2);
-#else               
         computeMacros(sim.lattice[lx-1][iY].fPop, &rho1, &ux1, &uy1);
         computeMacros(sim.lattice[lx-2][iY].fPop, &rho2, &ux2, &uy2);
-#endif        
         pressureBoundary[iY].rho = 4./3.*rho1 - 1./3.*rho2;
         pressureBoundary[iY].uPar = 0.; //uy=0
 
@@ -267,9 +257,8 @@ void Hello(void){
 int main(int argc, char *argv[]) {
     int i;
     char case_name[80], filename[80];
-
-    void (*collision_func)(Simulation *) = NULL;
-    void (*stream_func)(Simulation *) = NULL;
+    void (*stream_func)(Simulation *)=NULL;
+    void (*collision_func)(Simulation *)=NULL;
 
       // initialisation of a lx * ly simulation
     setConstants(argc, argv);
@@ -395,13 +384,13 @@ int main(int argc, char *argv[]) {
 
     // allocate spaces for boundries
     iniData();
-     printf("Pass iniData\n");
+    // printf("Pass iniData\n");
     // fflush(stdout);
 
     // allocae space for nodes and lattice
     // set configurations
     constructSim(&sim, lx, ly);
-    printf("Pass constructSim\n");
+    // printf("Pass constructSim\n");
     // fflush(stdout);
 
     // bounce back dynamics in obstacles, else use lbgk(bulk dynamics)
@@ -460,15 +449,15 @@ int main(int argc, char *argv[]) {
         }
 
         //save before computing
-#ifndef NO_SAVE
-        if (iT%tSave==0) {
-            printf("iT=%d, save, count=%d\n", iT, count);
-            fflush(stdout);
-            sprintf(filename, "vel_before_%s_%d.dat", case_name, count);
-            saveVel(&sim, filename);
-            count++;
-        }
-#endif
+/*#ifndef NO_SAVE*/
+        /*if (iT%tSave==0) {*/
+            /*printf("iT=%d, save, count=%d\n", iT, count);*/
+            /*fflush(stdout);*/
+            /*sprintf(filename, "vel_%s_%d.dat", case_name, count);*/
+            /*saveVel(&sim, filename);*/
+            /*count++;*/
+        /*}*/
+/*#endif*/
 
 #ifdef ZGB
         t0 = get_cur_time();
@@ -527,10 +516,12 @@ int main(int argc, char *argv[]) {
             printf("iT=%d, save, count=%d\n", iT, count);
             fflush(stdout);
             sprintf(filename, "vel_%s_stream_%d.dat", case_name, count);
+            /*sprintf(filename, "vel_%s_stream_%d.dat", case_name, iT);*/
             saveVel(&sim, filename);
             count++;
         }
 #endif
+
 
           // By default: periodic boundary conditions. In this case,
           //   this is important, because the upper and lower
@@ -545,6 +536,7 @@ int main(int argc, char *argv[]) {
           // the data are written to disk after streaming and Periodic, to be
           //   that the macroscopic variables are computed
           //   correctly on the boundaries
+
 
 /*
         updateZeroGradientBoundary();

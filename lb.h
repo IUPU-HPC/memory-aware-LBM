@@ -1,8 +1,7 @@
 /*  Lattice Boltzmann sample, written in C
  *
- *  Copyright (C) 2006 Jonas Latt
- *  Address: Rue General Dufour 24,  1211 Geneva 4, Switzerland
- *  E-mail: Jonas.Latt@cui.unige.ch
+ *  Copyright (C) 2018 Yuankun Fu
+ *  E-mail: fu121@purdue.edu
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -89,11 +88,6 @@ typedef struct {
     int lx, ly;               // lx*ly lattice
     Node*  memoryChunk;       // contiguous raw memory
     Node*  tmpMemoryChunk;    // contiguous raw tmp memory
-    
-//#if defined(TIGHT_BLOCK)    
-    int** map_matrix;         // map geometry coordinate to raw memory index
-//#endif
-    
     Node** lattice;           // lattice, points to raw memory
     Node** tmpLattice;        // tmp lasttice, points to raw memory
 } Simulation;
@@ -120,7 +114,6 @@ void collide_tight_panel_iy_openmp(Simulation* sim);
 void finalize_tight(Simulation* sim);
 
 void constructSim(Simulation* sim, int lx, int ly);
-int  map(Simulation* sim, int ix, int iy);
 void destructSim(Simulation* sim);
 void setDynamics(Simulation* sim, int iX, int iY, Dynamics* dyn);
 
